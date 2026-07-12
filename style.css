@@ -1,0 +1,286 @@
+/* ============================================================
+      1. NO COLOR. Refuse hue to keep the work focused on the
+         archive.
+
+   2. NO CENTER. Content sits left; data sits in the right
+      margin much like periphery. Structure encodes the
+      finding.
+
+   3. THE AFTERIMAGE. Interactive elements
+      brighten quickly on hover and decay SLOWLY after the
+      cursor leaves (0.15s in, 4s out). The glow persists after
+      contact ends. Two lines of CSS. No JavaScript.
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   Change here,changes everywhere. */
+:root {
+  --eigengrau: #16161D;  /* background */
+  --recess:    #0E0E13;  /* page footer */
+  --bone:      #B9B7B0;  /* body text */
+  --lit:       #E8E6DF;  /* hover */
+  --ash:       #6E6D76;  /* secondary text, data, captions */
+  --veil:      #34343D;  /* hairline rules and borders */
+
+  /* Type. No font downloads — the site depends on nothing.
+     Serif stack for prose.
+     Monospace stack for instrument data. */
+  --prose: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --data:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+
+/* ---- RESET (minimal) --------------------------------------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 17px; }
+
+body {
+  background: var(--eigengrau);
+  color: var(--bone);
+  font-family: var(--prose);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+
+/* ---- THE DRAWN CURSOR --------------------------------------
+   Works with cursor.js. The real cursor is hidden ONLY when
+   the script confirms it's running — that's what the
+   .has-cursor class means. No JS, no hiding: visitors always
+   have a cursor. */
+:root { --cursor-size: 44px; }
+
+.has-cursor,
+.has-cursor * { cursor: none; }
+
+#cursor {
+  position: fixed;
+  /* Negative offsets center the image on the pointer:
+     half of --cursor-size, negated. */
+  left: calc(var(--cursor-size) / -2);
+  top:  calc(var(--cursor-size) / -2);
+  width: var(--cursor-size);
+  pointer-events: none;          /* never blocks a click */
+  transform: translate(-999px, -999px);  /* parked until first move */
+  will-change: transform;
+  z-index: 999;
+}
+
+#cursor img {
+  display: block;
+  width: 100%;
+  /* transform ease = rotation; filter ease = the tone shift.
+     cursor.js drives both. The 0.4s on filter is what makes the
+     inversion "soft" — and the slow fade back to rest when the
+     visitor stills. */
+  transition: transform 0.12s linear, filter 0.4s ease-out;
+  will-change: transform, filter;
+}
+
+/* ALTERNATIVE — constant slow spin instead of direction-
+   following: the circle reads as continuously being redrawn.
+   To try it: uncomment this block. (cursor.js's rotation will
+   be overridden by the animation; tracking still works.)
+@keyframes redraw { to { transform: rotate(360deg); } }
+#cursor img { animation: redraw 14s linear infinite; transition: none; }
+*/
+
+/* Reduced motion: position tracking stays (it IS the cursor),
+   rotation flourishes go. */
+@media (prefers-reduced-motion: reduce) {
+  #cursor img { transition: none; animation: none; }
+}
+
+
+/* ---- THE AFTERIMAGE ----------------------------
+   The element stays lit after the cursor has moved on, then
+   fades over 4 seconds. */
+a {
+  color: var(--bone);
+  text-decoration: none;
+  border-bottom: 1px solid var(--veil);
+  transition: color 4s ease-out, border-color 4s ease-out;
+}
+a:hover {
+  color: var(--lit);
+  border-color: var(--ash);
+  transition: color 0.15s ease-in, border-color 0.15s ease-in;
+}
+
+a:focus-visible {
+  outline: 1px solid var(--bone);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a, a:hover { transition: none; }
+}
+
+
+/* ---- PAGE FRAME --------------------------------------------
+   One grid: a prose column (left, capped at a readable measure)
+   and a periphery column (right) that most pages leave empty.
+ */
+
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 34em) minmax(10em, 1fr);
+  gap: 3rem;
+  padding: 4rem 5vw 6rem;
+  max-width: 72rem;
+}
+
+/* On narrow screens the periphery folds under the prose. */
+@media (max-width: 44rem) {
+  .page { grid-template-columns: 1fr; padding: 2.5rem 6vw 4rem; }
+}
+
+
+/* ---- HEADER / NAV ------------------------------------------ */
+.site-head {
+  grid-column: 1 / -1;          /* spans both columns */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 2.5rem;
+  margin-bottom: 4rem;
+}
+
+.site-name {
+  font-size: 1rem;
+  font-weight: normal;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.site-nav { display: flex; gap: 1.75rem; }
+
+.site-nav a { border-bottom: none; font-size: 0.95rem; color: var(--ash); }
+.site-nav a:hover { color: var(--lit); }
+.site-nav a[aria-current="page"] { color: var(--bone); }
+
+
+/* ---- PROSE ------------------------------------------------- */
+h1 {
+  font-weight: normal;
+  font-size: 1.55rem;
+  letter-spacing: 0.01em;
+  margin-bottom: 2.2rem;
+  color: var(--bone);
+}
+
+.prose p + p { margin-top: 1.2em; }
+
+.quiet { color: var(--ash); font-size: 0.92rem; }
+
+
+/* ---- ARCHIVE ENTRIES ---------------------------------------
+   One <article class="study"> per study. The layout inside an
+   entry repeats the page logic: note on the left, instrument
+   data in the periphery. */
+.study {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 34em) minmax(10em, 1fr);
+  gap: 1rem 3rem;
+  padding: 3rem 0;
+  border-top: 1px solid var(--veil);
+}
+
+@media (max-width: 44rem) {
+  .study { grid-template-columns: 1fr; }
+}
+
+.study-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.study-number {
+  font-family: var(--data);
+  font-size: 0.9rem;
+  color: var(--bone);
+  letter-spacing: 0.08em;
+}
+
+.study-date { font-family: var(--data); font-size: 0.8rem; color: var(--ash); }
+
+/* Images sit in a slightly deeper shadow so their
+   own light reads against it. */
+.study figure {
+  grid-column: 1;
+  background: var(--recess);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.study img { display: block; width: 100%; height: auto; }
+
+.study figcaption {
+  font-family: var(--data);
+  font-size: 0.75rem;
+  color: var(--ash);
+  padding-top: 0.7rem;
+}
+
+.study audio { width: 100%; margin-top: 0.6rem; }
+
+/* The body of the entry. */
+.study .note { grid-column: 1; }
+
+/* THE PERIPHERY — instrument data as marginalia.
+   A definition list: <dt> is the label, <dd> is the reading. */
+.periphery {
+  grid-column: 2;
+  grid-row: 2 / span 3;      /* runs alongside figure + note */
+  font-family: var(--data);
+  font-size: 0.78rem;
+  line-height: 1.9;
+  color: var(--ash);
+  align-self: start;
+  border-left: 1px solid var(--veil);
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 44rem) {
+  .periphery { grid-column: 1; grid-row: auto; border-left: none; padding-left: 0; }
+}
+
+.periphery dt {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  margin-top: 0.9rem;
+}
+
+.periphery dd { color: var(--bone); }
+
+/* An open contradiction attached to an entry. Not an error —
+   load-bearing structure. Set apart, unresolved. */
+.contradiction {
+  grid-column: 1;
+  margin-top: 1.4rem;
+  padding-left: 1.2rem;
+  border-left: 1px solid var(--ash);
+  color: var(--ash);
+  font-size: 0.92rem;
+}
+
+
+/* ---- FOOTER ------------------------------------------------ */
+.site-foot {
+  grid-column: 1 / -1;
+  margin-top: 5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--veil);
+  font-family: var(--data);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--ash);
+}

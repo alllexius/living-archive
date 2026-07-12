@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archive — A Living Archive</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="site-head">
+    <div class="site-name">A Living Archive</div>
+    <nav class="site-nav">
+      <a href="index.html">Condition</a>
+      <a href="archive.html" aria-current="page">Archive</a>
+      <a href="field-notes.html">Field Notes</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <main class="prose" style="grid-column: 1 / -1; display: contents;">
+
+    <h1 style="grid-column: 1 / -1;">Gradient Interference — Segment One <span class="quiet">(80 studies, 18 weeks)</span></h1>
+
+    <!-- ==========================================================
+         THE ENTRY SCHEMA.
+
+           study-number   required
+           study-date     required
+           figure         image or video still + caption
+           audio          optional
+           note           record
+           periphery      instrument data (frequencies,
+                          physiological readings, witness)
+           contradiction  optional.
+
+         Duplicate the whole <article> block per entry.
+         ========================================================== -->
+
+    <!-- ENTRY: Template Example. VERIFY every value before publishing.
+         Replace the image path with actual file. -->
+    <article class="study" id="study-049">
+      <div class="study-head">
+        <span class="study-number">STUDY #049</span>
+        <!-- TODO: real date from notes -->
+        <span class="study-date">DATE TK</span>
+      </div>
+
+      <figure>
+        <!-- TODO: export a still or short loop from the study.
+             Keep images under ~500 KB (export at 1600px wide,
+             quality ~80). This helps keep the site optimized,
+             even on bad WiFi. -->
+        <img src="assets/study_049.png"
+             alt="Two blurred circles, red and blue, at near-threshold opacity on a black field.">
+        <figcaption>049 — dual circle, non-harmonic, max opacity 0.025</figcaption>
+      </figure>
+
+      <p class="note">
+        I can feel myself perceiving. The eye cannot resolve it into
+        stillness. Not light — the memory of light.
+        <!-- TODO: replace/extend with the fuller note from the
+             clinical record. First person, present tense.
+             Do not polish it into artist-statement lingo
+             Maintain raw register. -->
+      </p>
+
+      <dl class="periphery">
+        <dt>Operators</dt>
+        <dd>Circle TOP &times;2, LFO CHOP, Filter, Math, Blur, Glow, Add</dd>
+
+        <dt>Frequencies</dt>
+        <dd>0.003 Hz / 0.0056 Hz (&asymp;1:1.867)</dd>
+
+        <dt>Sub-perceptual</dt>
+        <dd>22 Hz X-translate — felt, not seen</dd>
+
+        <dt>Emergent beat</dt>
+        <dd>0.0026 Hz &asymp; 6.4 min — not placed; generated</dd>
+
+        <dt>Max opacity</dt>
+        <dd>0.025</dd>
+
+        <dt>Heart rate</dt>
+        <dd>54 bpm — lowest of batch</dd>
+
+        <dt>Witness</dt>
+        <dd>none — solitary session</dd>
+      </dl>
+
+      <p class="contradiction">
+        Open: read for months as evidence for disappearance. A second
+        nervous system (076/009 sessions) suggests the operative
+        mechanism may be barely-held presence, not absence. Unresolved.
+      </p>
+    </article>
+
+
+    <!-- ==========================================================
+         BLANK TEMPLATE — copy from here down to the closing
+         </article>, paste above this comment, fill in.
+         Delete any optional field that doesn't apply
+         (audio, contradiction).
+         ========================================================== -->
+    <!--
+    <article class="study" id="study-0XX">
+      <div class="study-head">
+        <span class="study-number">STUDY #0XX</span>
+        <span class="study-date">YYYY-MM-DD</span>
+      </div>
+
+      <figure>
+        <img src="assets/study-0XX.jpg" alt="Describe what is visible, plainly.">
+        <figcaption>caption</figcaption>
+        <audio controls src="assets/study-0XX.m4a"></audio>
+      </figure>
+
+      <p class="note">
+        The phenomenological record, in your words, unpolished.
+      </p>
+
+      <dl class="periphery">
+        <dt>Operators</dt>      <dd>...</dd>
+        <dt>Frequencies</dt>    <dd>...</dd>
+        <dt>Heart rate</dt>     <dd>...</dd>
+        <dt>Witness</dt>        <dd>...</dd>
+      </dl>
+
+      <p class="contradiction">
+        Only if one genuinely attaches.
+      </p>
+    </article>
+    -->
+
+  </main>
+
+  <footer class="site-foot">
+    SEGMENT ONE CONCLUDED JULY 2026 &mdash; ARCHIVE LIVING
+  </footer>
+
+</div>
+
+<div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
+<script src="cursor.js"></script>
+
+</body>
+</html>
