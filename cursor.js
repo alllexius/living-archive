@@ -39,7 +39,7 @@
     var v = Math.min(speed / 40, 1);
     if (!SPEED_BRIGHTENS) v = 1 - v;
     // invert(0) = icon as drawn (dark). invert(1) = fully light.
-    img.style.filter = "invert(" + v.toFixed(.5) + ")";
+    img.style.filter = "invert(.5)";
   }
 
   document.addEventListener("mousemove", function (e) {
