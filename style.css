@@ -71,10 +71,6 @@ body {
 #cursor img {
   display: block;
   width: 100%;
-  /* transform ease = rotation; filter ease = the tone shift.
-     cursor.js drives both. The 0.4s on filter is what makes the
-     inversion "soft" — and the slow fade back to rest when the
-     visitor stills. */
   transition: transform 0.12s linear, filter 0.4s ease-out;
   will-change: transform, filter;
 }
@@ -93,10 +89,6 @@ body {
   #cursor img { transition: none; animation: none; }
 }
 
-
-/* ---- THE AFTERIMAGE ----------------------------
-   The element stays lit after the cursor has moved on, then
-   fades over 4 seconds. */
 a {
   color: var(--bone);
   text-decoration: none;
