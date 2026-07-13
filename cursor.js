@@ -28,11 +28,6 @@
   /* ---- SPEED -> LIGHT MAPPING --------------------------------
      The circle's tone responds to how the visitor moves.
 
-     false = stillness brightens, speed darkens.
-             Light rewards dwelling. (The archive's position.)
-     true  = speed brightens, stillness stays dark.
-             Light rewards velocity. (The spectacle mapping.)
-
      Flip the boolean, refresh, judge with your eyes.          */
   var SPEED_BRIGHTENS = false;
 
@@ -44,7 +39,7 @@
     var v = Math.min(speed / 40, 1);
     if (!SPEED_BRIGHTENS) v = 1 - v;
     // invert(0) = icon as drawn (dark). invert(1) = fully light.
-    img.style.filter = "invert(" + v.toFixed(2) + ")";
+    img.style.filter = "invert(" + v.toFixed(.5) + ")";
   }
 
   document.addEventListener("mousemove", function (e) {
