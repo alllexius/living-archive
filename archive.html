@@ -351,5 +351,13 @@
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
 
+<!-- DISABLE RMB -->  
+<script>
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+</script>
+<!-- DISABLE RMB -->  
+  
 </body>
 </html>
