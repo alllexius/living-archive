@@ -182,11 +182,9 @@ h1 {
   border-top: 1px solid var(--veil);
 }
 
-/* Can delete if the images are still clickable */
+/*------------------------
 
-.non-clickable {
-    pointer-events: none;
-}
+Can delete if the images are still clickable */
 
 figure {
     position: relative;
@@ -199,16 +197,14 @@ figure::after {
     top: 0;
     left: 0;
     width: 100%;
-    /* Leaves the figcaption text clickable underneath the image box */
-    height: calc(100% - 2em); 
+    height: calc(100% - 2em);
     z-index: 10;
+    pointer-events: auto;
 }
 
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
+/* Can delete if the images are still clickable 
 
-/* Can delete if the images are still clickable */
+--------------------------*/
 
       
 @media (max-width: 44rem) {
