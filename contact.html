@@ -5,14 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="Alexius Odom">
   <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
-  <meta name="rights" content="All content on this site is the intellectual property 
-                               of Alexius Odom. Unauthorized reproduction, distribution, 
+  <meta name="rights" content="All content on this site is the intellectual property
+                               of Alexius Odom. Unauthorized reproduction, distribution,
                                or use is prohibited.">
 
-<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected 
-  under U.S. copyright law. Unauthorized use is prohibited. 
+<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected
+  under U.S. copyright law. Unauthorized use is prohibited.
   -->
-  
+
+  <title>Alexius</title>
+  <link rel="icon" href="assets/favicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="interference.css?v=3">
+</head>
+<body>
+
 <canvas id="field-canvas" aria-hidden="true"></canvas>
 
 <a href="index.html" id="site-title">Alexius</a>
@@ -27,17 +34,19 @@
 <nav id="centre-nav" aria-label="Site">
   <a href="index.html">Condition</a>
   <a href="archive.html">Archive</a>
-  <a href="field-notes.html" aria-current="page">Field Notes</a>
-  <a href="contact.html">Contact</a>
+  <a href="field-notes.html">Field Notes</a>
+  <a href="contact.html" aria-current="page">Contact</a>
 </nav>
 
 <div id="invert-veil" aria-hidden="true"></div>
 
-  <main class="fn-stage">
-    <h1>Contact</h1>
+
+<div class="page">
+
+  <main class="prose">
 
     <p>
-      <a href="https://www.are.na/alexius/channels" target="_blank" > Are.na </a>
+      <a href="https://www.are.na/alexius/channels" target="_blank" rel="noopener noreferrer">Are.na</a>
     </p>
 
     <p style="margin-top:2rem;">
@@ -46,9 +55,13 @@
 
   </main>
 
+  <div></div>
+
+</div>
+
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
-<script src="cursor.js"></script>
-<script src="interference.js"></script>
+<script src="cursor.js?v=3"></script>
+<script src="interference.js?v=3"></script>
 
 </body>
 </html>
