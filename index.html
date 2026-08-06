@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="author" content="Your Legal Name">
+  <meta name="author" content="Alexius Odom">
   <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
   <meta name="rights" content="All content on this site is the intellectual property 
                                of Alexius Odom. Unauthorized reproduction, distribution, 
@@ -16,28 +16,31 @@
   <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
+   <link rel="stylesheet" href="interference.css">
 </head>
 <body>
+
+<canvas id="field-canvas" aria-hidden="true"></canvas>
+
+<a href="index.html" id="site-title">Alexius</a>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html" aria-current="page">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html">Field Notes</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
+  
 <div class="page">
 
-  <header class="site-head">
-    <div class="site-name">Alexius</div>
-    <nav class="site-nav">
-      <a href="index.html" aria-current="page">Condition</a>
-      <a href="archive.html">Archive</a>
-      <a href="field-notes.html">Field Notes</a>
-      <a href="contact.html">Contact</a>
-    </nav>
-  </header>
-
   <main class="prose">
-    <!-- ONE paragraph. The condition. Keep it simple. -->
-    <p>
-      The nervous system is the instrument. These pages document a
-      perceptual investigation conducted in light and shadow: studies, field
-      notes, physiological readings, and the contradictions and curiosities that
-      remain open.
-    </p>
 
     <p class="quiet" style="margin-top:2.5rem;">
       <a href="archive.html">Enter the archive</a>
@@ -50,6 +53,7 @@
 
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
+<script src="interference.js"></script>
 
 </body>
 </html>
