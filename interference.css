@@ -1,0 +1,316 @@
+/* ============================================================
+   interference.css
+   Loads AFTER style.css. Additive only — redefines nothing
+   from your palette.
+
+   Layer order (z-index), lowest first:
+     -1   #field-canvas    the interference field
+      0   page content
+    999   #cursor          your drawn cursor
+   8000   #centre-nav      inverts with the page
+   8200   #site-title / #page-title
+   9000   #invert-veil     the inversion itself
+   9100   #veil-btn        never inverted; mirrors state itself
+   ============================================================ */
+
+
+/* ---- THE FIELD --------------------------------------------- */
+#field-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: -1;
+  pointer-events: none;
+}
+
+
+/* ---- THE TWO MARKS -----------------------------------------
+   Name left, page right. Both on the same baseline, both in the
+   data font — they are instrument labels, not headings. The
+   name shares its left edge (5vw) with the standing line at the
+   bottom of the page, so the left margin holds one axis. */
+#site-title,
+#page-title {
+  position: fixed;
+  top: 1.15rem;
+  z-index: 8200;
+  margin: 0;
+  font-family: var(--data);
+  font-size: 0.76rem;
+  font-weight: normal;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ash);
+  border-bottom: none;
+}
+#site-title { left: 5vw; }
+#page-title { right: 5vw; text-align: right; }
+#site-title:hover { color: var(--lit); }
+
+/* The descriptive line, if you keep one. Delete the element to
+   drop it — nothing else depends on it. */
+#page-note {
+  position: fixed;
+  top: 2.6rem;
+  right: 5vw;
+  z-index: 8200;
+  max-width: 20em;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 0.64rem;
+  line-height: 1.7;
+  letter-spacing: 0.06em;
+  color: var(--ash);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (max-width: 44rem) {
+  #site-title, #page-title { left: 6vw; right: 6vw; font-size: 0.66rem; }
+  #page-note { display: none; }
+}
+
+
+/* ---- THE BUTTON --------------------------------------------
+   Above the veil, so it is never inverted by it; it mirrors the
+   state itself, which means hover always shows you the state you
+   are about to enter. */
+#veil-btn {
+  position: fixed;
+  top: 1.05rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9100;
+
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.11);
+  background: rgba(255,255,255,0.045);
+  -webkit-backdrop-filter: blur(7px) saturate(115%);
+  backdrop-filter: blur(7px) saturate(115%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.17),
+    inset 0 -1px 0 rgba(0,0,0,0.30),
+    0 2px 12px rgba(0,0,0,0.55);
+  transition: filter 500ms ease;
+}
+.has-cursor #veil-btn { cursor: none; }
+#veil-btn.is-inverted       { filter: invert(1); }
+#veil-btn:hover             { filter: invert(1); }
+#veil-btn.is-inverted:hover { filter: none; }
+#veil-btn:focus-visible { outline: 1px solid var(--bone); outline-offset: 4px; }
+
+
+/* ---- THE VEIL ---------------------------------------------- */
+#invert-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  -webkit-backdrop-filter: invert(1);
+  backdrop-filter: invert(1);
+  clip-path: circle(0% at 50% 35px);
+  transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
+}
+#invert-veil.on      { clip-path: circle(155% at 50% 35px); }
+#invert-veil.no-anim { transition: none; }
+
+
+/* ---- CENTRE NAV -------------------------------------------- */
+#centre-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1100ms ease;
+}
+#centre-nav.open { opacity: 1; pointer-events: auto; }
+
+#centre-nav a {
+  font-family: var(--data);
+  font-size: 0.9rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ash);
+  border-bottom: none;
+  opacity: 0;
+  transform: translateY(9px);
+  transition: opacity 900ms ease, transform 900ms ease, color 0.15s ease-in;
+}
+#centre-nav.open a { opacity: 1; transform: none; }
+#centre-nav a:hover { color: var(--lit); }
+#centre-nav a[aria-current="page"] { color: var(--bone); }
+
+#centre-nav.open a:nth-child(1) { transition-delay: 300ms; }
+#centre-nav.open a:nth-child(2) { transition-delay: 440ms; }
+#centre-nav.open a:nth-child(3) { transition-delay: 580ms; }
+#centre-nav.open a:nth-child(4) { transition-delay: 720ms; }
+#centre-nav.open a:nth-child(5) { transition-delay: 860ms; }
+
+/* The nav opens where the work is, so the work withdraws while
+   it is open rather than being covered by it. Reading and
+   navigating are two states, not one crowded one. */
+.fn-stage,
+.page,
+.fn-foot {
+  transition: opacity 1000ms ease, filter 1000ms ease;
+}
+body.nav-open .fn-stage,
+body.nav-open .page,
+body.nav-open .fn-foot {
+  opacity: 0.08;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+
+/* ---- BLOOM -------------------------------------------------
+   JS drives filter and text-shadow. Both paint outside the box
+   without reflowing anything. Your 4s afterimage decay on colour
+   still runs underneath, on different properties: the bloom is
+   what happens during contact, the afterimage is what remains
+   after it. */
+.prose a,
+.fn-entry a,
+a.bloom {
+  position: relative;
+  will-change: filter, text-shadow;
+}
+
+
+/* ---- THE STAGE ---------------------------------------------
+   Two states, deliberately.
+
+   Without JS the stage is inert: entries stack and the page
+   scrolls, exactly as before. This is the same contract
+   cursor.js makes — if the script fails, nothing is lost.
+
+   With JS the script adds .is-live and one entry is held at a
+   time. Every entry is absolutely centred in both cases, so
+   moving between them changes opacity only. Nothing reflows. */
+.fn-stage {
+  position: relative;
+  padding: 7rem 5vw 6rem;
+}
+
+.fn-entry img,
+.fn-entry video { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.fn-entry audio { display: block; width: 100%; }
+
+/* -- inert (no JS) -- */
+.fn-stage:not(.is-live) .fn-entry {
+  width: min(86vw, 34em);
+  margin: 0 0 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--veil);
+}
+
+/* -- live -- */
+.fn-stage.is-live {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 0;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.has-cursor .fn-stage.is-live { cursor: none; }
+
+.fn-stage.is-live .fn-entry {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(86vw, 34em);
+  max-height: 80vh;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 900ms ease;
+}
+.fn-stage.is-live .fn-entry.current {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 2;
+}
+/* Media is capped so a tall frame never runs past the stage. */
+.fn-stage.is-live .fn-entry img,
+.fn-stage.is-live .fn-entry video { max-height: 68vh; width: auto; }
+
+/* The adjacent entry, ghosted in when the pointer nears an edge.
+   That is the whole affordance: no arrow, no counter, no
+   instruction. The space shows you where it opens. */
+.fn-ghost {
+  position: absolute;
+  top: 50%;
+  width: min(34vw, 20em);
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(3px);
+  transition: opacity 800ms ease;
+  z-index: 0;
+}
+.fn-ghost.left  { left: 2vw; }
+.fn-ghost.right { right: 2vw; }
+.fn-ghost.lit   { opacity: 0.09; }
+.fn-ghost img,
+.fn-ghost video { display: block; width: 100%; height: auto; }
+
+/* On touch the ghost is dropped — swipe is the affordance there,
+   and it is already native. */
+@media (max-width: 44rem) {
+  .fn-ghost { display: none; }
+  .fn-stage.is-live .fn-entry { width: 88vw; }
+}
+
+/* The standing line. */
+.fn-foot {
+  position: fixed;
+  left: 5vw;
+  bottom: 1.4rem;
+  z-index: 8100;
+  font-family: var(--data);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--ash);
+  pointer-events: none;
+}
+@media (max-width: 44rem) {
+  .fn-foot { left: 6vw; font-size: 0.6rem; }
+}
+
+
+/* ---- IMAGE HANDLING ----------------------------------------
+   Replaces the figure::after overlay, which only ever applied on
+   pages using <figure> — Field Notes never did. Right-click is
+   blocked in JS. Neither stops devtools; nothing does. */
+img, video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+
+/* ---- REDUCED MOTION ----------------------------------------
+   The field freezes to a still frame (handled in JS) and bloom
+   is disabled. The inversion stays: it is a luminance change,
+   not motion, and it is the point of the button. */
+@media (prefers-reduced-motion: reduce) {
+  #centre-nav,
+  #centre-nav a,
+  .fn-entry,
+  .fn-ghost,
+  .fn-stage,
+  .page { transition-duration: 1ms; }
+}
