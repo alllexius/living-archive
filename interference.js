@@ -20,6 +20,12 @@
   var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var COARSE  = window.matchMedia("(pointer: coarse)").matches;
 
+  // The veil holds the field still while it animates. A canvas
+  // repainting every frame underneath a backdrop-filter forces
+  // the filtered region to be recaptured every frame with it —
+  // one of the three things feeding the strobe.
+  var FIELD = { hold: function () {}, release: function () {} };
+
 
   /* ==========================================================
      1. THE FIELD
@@ -44,8 +50,12 @@
     var canvas = document.getElementById("field-canvas");
     if (!canvas) return;
 
-    var gl = canvas.getContext("webgl", { antialias: false, alpha: false })
-          || canvas.getContext("experimental-webgl", { antialias: false, alpha: false });
+    // preserveDrawingBuffer so the last frame survives while the
+    // loop is held — without it the canvas may clear to black the
+    // moment drawing stops.
+    var opts = { antialias: false, alpha: false, preserveDrawingBuffer: true };
+    var gl = canvas.getContext("webgl", opts)
+          || canvas.getContext("experimental-webgl", opts);
     if (!gl) { canvas.style.display = "none"; return; }   // body keeps --eigengrau
 
     var VERT =
@@ -99,10 +109,18 @@
       "  v *= mix(0.55, 1.0, r2);",
       "  v *= mix(0.55, 1.0, r3);",
       "  v *= mix(0.60, 1.0, r4);",
-      "  v *= mix(0.62, 1.0, rp);",
+      // Pointer floor lowered 0.62 -> 0.58: the multiply you
+      // singled out now cuts deeper, so the field answers the
+      // cursor more than it answers the clock.
+      "  v *= mix(0.58, 1.0, rp);",
 
       "  vec3 base  = vec3(0.0863, 0.0863, 0.1137);",  // #16161D
-      "  vec3 field = base + v * 0.022;",
+      // AMPLITUDE. The one number to turn. 0.022 -> 0.0253 is the
+      // 15% you asked for; peak moves from about #1B1B22 to
+      // #1C1C23. Fifteen percent of a near-threshold value is
+      // still near threshold, so if it reads as too quiet this is
+      // the line to raise again.
+      "  vec3 field = base + v * 0.0253;",
 
       "  field += (bayer4(gl_FragCoord.xy) - 0.5) / 255.0;",
       "  gl_FragColor = vec4(field, 1.0);",
@@ -162,7 +180,16 @@
       }, { passive: true });
     }
 
+    var held = false;
+    FIELD.hold    = function () { held = true; };
+    FIELD.release = function () { held = false; };
+
     function draw(ms) {
+      // Held: skip the draw entirely, keep the loop alive. Phase
+      // advances underneath, but at 0.0041–0.0193 Hz two seconds
+      // of drift is nothing you could see.
+      if (held) { requestAnimationFrame(draw); return; }
+
       var t = ms * 0.001;
 
       if (COARSE) {
@@ -231,7 +258,11 @@
       store(on);
     }
 
-    btn.addEventListener("click", function () { set(!on); });
+    btn.addEventListener("click", function () {
+      FIELD.hold();
+      setTimeout(FIELD.release, 2150);   // transition is 2000ms
+      set(!on);
+    });
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && on) set(false);
