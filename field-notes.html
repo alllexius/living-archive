@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alexius Odom">
   <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
-  <meta name="rights" content="All content on this site is the intellectual property 
-                               of Alexius Odom. Unauthorized reproduction, distribution, 
+  <meta name="rights" content="All content on this site is the intellectual property
+                               of Alexius Odom. Unauthorized reproduction, distribution,
                                or use is prohibited.">
 
-<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected 
-  under U.S. copyright law. Unauthorized use is prohibited. 
+<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected
+  under U.S. copyright law. Unauthorized use is prohibited.
   -->
-  
-   <title>Alexius</title>
+
+  <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="interference.css">
@@ -22,6 +23,12 @@
 <canvas id="field-canvas" aria-hidden="true"></canvas>
 
 <a href="index.html" id="site-title">Alexius</a>
+
+<h1 id="page-title">Field Notes</h1>
+
+<!-- Delete this element to drop the descriptive line. Nothing
+     else depends on it. -->
+<p id="page-note">Journal entries, recordings, observations from experience itself. Unedited.</p>
 
 <button id="veil-btn" type="button"
         aria-label="Shift the field"
@@ -38,214 +45,205 @@
 <div id="invert-veil" aria-hidden="true"></div>
 
 
+<!-- ============================================================
+     THE STAGE
+
+     Order here is the order in the stage. Left half goes back,
+     right half goes forward; arrow keys work; swipe works.
+
+     Dates live in data-date and never render. Nine of these had
+     an unterminated quote — data-date="2026-08-02 data-setting="
+     — which swallowed the setting into the date value. All
+     closed. Watch that quote when adding entries; it is silent
+     when it breaks.
+     ============================================================ -->
+
 <main class="fn-stage">
 
-  
-    <h1>Field Notes</h1>
+  <article class="fn-entry" data-date="2026-08-03" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260803_terrain.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <p class="quiet">
-      Journal entries, recordings,
-      observations from experience itself. Unedited.
+  <article class="fn-entry" data-date="2026-08-02" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260802_iridescence.jpg" alt="" style="margin-top:1rem;">
+  </article>
+
+  <article class="fn-entry" data-date="2026-07-29" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/20260729_this_window.jpg" alt="" style="margin-top:1rem;">
+  </article>
+
+  <article class="fn-entry" data-date="2026-07-28" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <p style="margin-top:1rem;">
+      <i>This melody will stop sooner than I thought.</i>
     </p>
+    <audio controls src="assets/260728_penny_heart_1.m4a" style="margin-top:1rem;"></audio>
+  </article>
 
-    <article class="fn-entry" data-date="2026-08-03" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260803_terrain.jpg" style="margin-top:1rem;"></img>
-    </article>
-    
-    <article class="fn-entry" data-date="2026-08-02 data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260802_iridescence.jpg" style="margin-top:1rem;"></img>
-    </article>    
-    
-    <article class="fn-entry" data-date="2026-07-29" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/20260729_this_window.jpg" style="margin-top:1rem;"></img>
-    </article>
-    
-    <article class="fn-entry" data-date="2026-07-28" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <p style="margin-top:1rem;">
-        <i>This melody will stop sooner than I thought.
-        </i> 
-      </p>
-      <audio controls src="assets/260728_penny_heart_1.m4a" style="margin-top:1rem;"></audio>
-    </article>
+  <!-- date says 07-26, file says 260724 -->
+  <article class="fn-entry" data-date="2026-07-26" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <audio controls src="assets/260724_flight_htx_mpls_1.m4a" style="margin-top:1rem;"></audio>
+  </article>
 
-    <article class="fn-entry"  data-date="2026-07-26" data-setting="field">
-      <div class="study-date">setting: field </div> 
-      <audio controls src="assets/260724_flight_htx_mpls_1.m4a" style="margin-top:1rem;"></audio>
-    </article>
+  <article class="fn-entry" data-date="2026-07-16" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/260716_lasers_sheets.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-16" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/260716_lasers_sheets.jpg" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2026-07-16" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <video controls playsinline src="assets/260714_laser_field.mp4" style="margin-top:1rem;"></video>
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-16" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <video controls src="assets/260714_laser_field.mp4" style="margin-top:1rem;"></video>
-    </article>
+  <article class="fn-entry" data-date="2026-07-11" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <video controls playsinline src="assets/260711_light_scratch.mp4" style="margin-top:1rem;"></video>
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-11" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <video controls src="assets/260711_light_scratch.mp4" style="margin-top:1rem;"></video>
-    </article>
+  <article class="fn-entry" data-date="2026-07-11" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260711_light_break.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-11" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260711_light_break.jpg" style="margin-top:1rem;"></img>
-    </article>    
+  <article class="fn-entry" data-date="2026-07-11" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260711_lights_more_1.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-11" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260711_lights_more_1.jpg" style="margin-top:1rem;"></img>
-    </article>
-    
-    <article class="fn-entry" data-date="2026-07-10" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260710_diffusion_1.jpg" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2026-07-10" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260710_diffusion_1.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-09" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-      <img src="assets/260709_inverted_abstraction.gif" alt="" style="margin-top:1rem;">
-    </article>
+  <article class="fn-entry" data-date="2026-07-09" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <img src="assets/260709_inverted_abstraction.gif" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-07-04 data-setting="journal" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
-      <div class="study-date">setting: journal </div>
-      <p style="margin-top:1rem;">
-        <i> In the Ganzfeld goggles, where the space is undefined and depth cannot be determined, after about 5-10 minutes, color is 
-          experienced as a sensation more than a distinguishable name. “Real” world references like “green like grass” fall away. 
-          The individual colors, in the Ganzfeld, begin to turn from being “blue”, “orange”, “red” to distinct sensations on the 
-          spectrum of illumination and darkness. When the colors quickly shift from one to another, the shift isn't visible. It 
-          is felt with the eyes. I flex between startled and provoked in these moments, and I'm not sure what the difference is 
-          between what elicits which response. The quick shift feels like an actual pulse of fervor, mimicking its transitions in my 
-          own body, starting at the center of my core and spreading equally to the ends of every limb and follicle. The sensation is 
-          strongest within my very eyes, though. The eyelids, whether or not they are open, are almost forgotten. Then I 
-          instinctively blink, become aware of the action, and snap back to being a transcriber, filing away reality.
-        </i>  
-      </p>
-    </article>
+  <article class="fn-entry" data-date="2026-07-04" data-setting="journal">
+    <div class="study-date">setting: journal</div>
+    <p style="margin-top:1rem;">
+      <i>In the Ganzfeld goggles, where the space is undefined and depth cannot be determined, after about 5-10 minutes, color is
+        experienced as a sensation more than a distinguishable name. “Real” world references like “green like grass” fall away.
+        The individual colors, in the Ganzfeld, begin to turn from being “blue”, “orange”, “red” to distinct sensations on the
+        spectrum of illumination and darkness. When the colors quickly shift from one to another, the shift isn't visible. It
+        is felt with the eyes. I flex between startled and provoked in these moments, and I'm not sure what the difference is
+        between what elicits which response. The quick shift feels like an actual pulse of fervor, mimicking its transitions in my
+        own body, starting at the center of my core and spreading equally to the ends of every limb and follicle. The sensation is
+        strongest within my very eyes, though. The eyelids, whether or not they are open, are almost forgotten. Then I
+        instinctively blink, become aware of the action, and snap back to being a transcriber, filing away reality.</i>
+    </p>
+  </article>
 
-    <article class="fn-entry" data-date="2026-06-24 data-setting="journal">
-      <div class="study-date">setting: journal </div>
-      <p style="margin-top:1rem;">
-        <i> Force software to calculate the decay of light over time.
-        </i>  
-      </p>
-    </article>
+  <article class="fn-entry" data-date="2026-06-24" data-setting="journal">
+    <div class="study-date">setting: journal</div>
+    <p style="margin-top:1rem;">
+      <i>Force software to calculate the decay of light over time.</i>
+    </p>
+  </article>
 
-    <article class="fn-entry" data-date="2026-06-12" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/260612_bedroom.jpg" style="margin-top:1rem;"></img>
-    </article> 
+  <article class="fn-entry" data-date="2026-06-12" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/260612_bedroom.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-05-31" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/260531_holographic_webs.jpg" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2026-05-31" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/260531_holographic_webs.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-05-20 data-setting="journal">
-      <div class="study-date">setting: journal </div>
-      <p style="margin-top:1rem;">
-        <i>The irreducibility of perceptual experience – the sensation ≠ the act.
-        </i>  
-      </p>
-    </article>
+  <article class="fn-entry" data-date="2026-05-20" data-setting="journal">
+    <div class="study-date">setting: journal</div>
+    <p style="margin-top:1rem;">
+      <i>The irreducibility of perceptual experience – the sensation ≠ the act.</i>
+    </p>
+  </article>
 
-    <article class="fn-entry" data-date="2026-03-22" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/260322_sustenance_1.png" style="margin-top:1rem;"></img>
-    </article>
+  <!-- date says 03-11, file says 260322 -->
+  <article class="fn-entry" data-date="2026-03-11" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/260322_sustenance_1.png" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-02-18" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <p style="margin-top:1rem;">
-      </p>
-      <img src="assets/260218_new_plant_window_reflection.jpg" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2026-02-18" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/260218_new_plant_window_reflection.jpg" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2026-02-01 data-setting="journal">
-      <div class="study-date">setting: journal </div>
-      <p style="margin-top:1rem;">
-        <i> In closing my eyes, I used a clean finger to wiggle the edge, and sought out where the lichtchaos occurred and how. 
-          I did not see honeycombs or latticework, but flickers of light and squiggles; phosphenes triggered by external 
-          stimulation... It remains unknown... This intimate visual field of light.
-        </i>  
-      </p>
-    </article>
+  <article class="fn-entry" data-date="2026-02-01" data-setting="journal">
+    <div class="study-date">setting: journal</div>
+    <p style="margin-top:1rem;">
+      <i>In closing my eyes, I used a clean finger to wiggle the edge, and sought out where the lichtchaos occurred and how.
+        I did not see honeycombs or latticework, but flickers of light and squiggles; phosphenes triggered by external
+        stimulation... It remains unknown... This intimate visual field of light.</i>
+    </p>
+  </article>
 
-    <article class="fn-entry" data-date="2026-01-16" data-setting="practice">
-      <div class="study-date">setting: practice </div>
-       <video controls playsinline src="assets/260116_light_breaking.mp4" style="margin-top:1rem;"></video>
-    </article>
+  <article class="fn-entry" data-date="2026-01-16" data-setting="practice">
+    <div class="study-date">setting: practice</div>
+    <video controls playsinline src="assets/260116_light_breaking.mp4" style="margin-top:1rem;"></video>
+  </article>
 
-    <article class="fn-entry" data-date="2025-12-28" data-setting="journal">
-      <div class="study-date">setting: journal </div>
-      <p style="margin-top:1rem;">
-        <i>Light apparently doesn't just illuminate matter, it also magnetically influences it. But how? 
-        Is there a prioritization with what is influenced? How is matter influenced?</i>  
-      </p>
-    </article>
+  <article class="fn-entry" data-date="2025-12-28" data-setting="journal">
+    <div class="study-date">setting: journal</div>
+    <p style="margin-top:1rem;">
+      <i>Light apparently doesn't just illuminate matter, it also magnetically influences it. But how?
+      Is there a prioritization with what is influenced? How is matter influenced?</i>
+    </p>
+  </article>
 
-    <article class="fn-entry"  data-date="2025-12-19 data-setting="field">
-      <div class="study-date">setting: field </div>
-      <video controls src="assets/251219_drive_austin.mp4" style="margin-top:1rem;"></video>
-    </article>
+  <article class="fn-entry" data-date="2025-12-19" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <video controls playsinline src="assets/251219_drive_austin.mp4" style="margin-top:1rem;"></video>
+  </article>
 
-    <article class="fn-entry" data-date="2025-12-18 data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/251218_whole_light_red.png" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2025-12-18" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/251218_whole_light_red.png" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2025-12-18 data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/251218_broken_light.png" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2025-12-18" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/251218_broken_light.png" alt="" style="margin-top:1rem;">
+  </article>
 
-    <article class="fn-entry" data-date="2025-12-18 data-setting="field">
-      <div class="study-date">setting: field </div>
-      <img src="assets/251218_saintly_light.png" style="margin-top:1rem;"></img>
-    </article>
+  <article class="fn-entry" data-date="2025-12-18" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <img src="assets/251218_saintly_light.png" alt="" style="margin-top:1rem;">
+  </article>
 
-     <article class="fn-entry" data-date="2025-12-09" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <p style="margin-top:1rem;">
-        Infused solutions.
-      </p>
-      <audio controls src="assets/20251209_infusion_01_fn.mp3" style="margin-top:1rem;"></audio>
-    </article>
+  <article class="fn-entry" data-date="2025-12-09" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <p style="margin-top:1rem;">Infused solutions.</p>
+    <audio controls src="assets/20251209_infusion_01_fn.mp3" style="margin-top:1rem;"></audio>
+  </article>
 
-    <article class="fn-entry" data-date="2025-12-05" data-setting="field">
-      <div class="study-date">setting: field </div>
-      <p style="margin-top:1rem;">
-        Noises, metal, shadows.
-      </p>
-      <audio controls src="assets/251205_noise_live.m4a" style="margin-top:1rem;"></audio>
-    </article>
+  <article class="fn-entry" data-date="2025-12-05" data-setting="field">
+    <div class="study-date">setting: field</div>
+    <p style="margin-top:1rem;">Noises, metal, shadows.</p>
+    <audio controls src="assets/251205_noise_live.m4a" style="margin-top:1rem;"></audio>
+  </article>
 
 
+  <!-- ==========================================================
+       ENTRY TEMPLATE — duplicate, fill, place in order.
+       Voice recordings: .m4a or .mp3 only.
 
-    <!-- ==========================================================  
-         Voice recordings: only export as .m4a or .mp3 (both play
-         natively in every browser; no player code needed).
-         ========================================================== -->
+  <article class="fn-entry" data-date="YYYY-MM-DD" data-setting="darkness practice">
+    <div class="study-date">setting: darkness practice</div>
+    <p style="margin-top:1rem;">The entry, verbatim from the journal.</p>
+    <audio controls src="assets/note-YYYY-MM-DD.m4a" style="margin-top:1rem;"></audio>
+  </article>
 
-    <!-- ENTRY TEMPLATE — uncomment, duplicate, fill.
-    <article style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
-      <div class="study-date">YYYY-MM-DD &mdash; setting (darkness practice / goggles / field)</div>
-      <p style="margin-top:1rem;">
-        The entry, verbatim from the journal.
-      </p>
-      <audio controls src="assets/note-YYYY-MM-DD.m4a" style="width:100%; margin-top:1rem;"></audio>
-    </article>
-    -->
+       ========================================================== -->
 
 </main>
 
 <div class="fn-foot">20 MINUTES IN TRUE DARKNESS, DAILY</div>
-
 
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
