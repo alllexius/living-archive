@@ -12,24 +12,35 @@
   under U.S. copyright law. Unauthorized use is prohibited. 
   -->
   
-  <title>Field Notes — A Living Archive</title>
+   <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="interference.css">
 </head>
 <body>
-<div class="page">
 
-  <header class="site-head">
-    <div class="site-name">A Living Archive</div>
-    <nav class="site-nav">
-      <a href="index.html">Condition</a>
-      <a href="archive.html">Archive</a>
-      <a href="field-notes.html" aria-current="page">Field Notes</a>
-      <a href="contact.html">Contact</a>
-    </nav>
-  </header>
+<canvas id="field-canvas" aria-hidden="true"></canvas>
 
-  <main class="prose">
+<a href="index.html" id="site-title">Alexius</a>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html" aria-current="page">Field Notes</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
+
+
+<main class="fn-stage">
+
+  
     <h1>Field Notes</h1>
 
     <p class="quiet">
@@ -37,18 +48,18 @@
       observations from experience itself. Unedited.
     </p>
 
-    <article data-date="2026-08-03" data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-08-03" data-setting="practice">
       <div class="study-date">setting: practice </div>
       <p style="margin-top:1rem;">
       </p>
-      <img src="assets/260803_terrain.jpg" style="width:100%; margin-top:1rem;"></img>
+      <img src="assets/260803_terrain.jpg" style="margin-top:1rem;"></img>
     </article>
     
-    <article data-date="2026-08-02 data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-08-02 data-setting="practice">
       <div class="study-date">setting: practice </div>
       <p style="margin-top:1rem;">
       </p>
-      <img src="assets/260802_iridescence.jpg" style="width:100%; margin-top:1rem;"></img>
+      <img src="assets/260802_iridescence.jpg" style="margin-top:1rem;"></img>
     </article>    
     
     <article data-date="2026-07-29" data-setting="field" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
@@ -81,18 +92,14 @@
       <img src="assets/260716_lasers_sheets.jpg" style="width:100%; margin-top:1rem;"></img>
     </article>
 
-    <article data-date="2026-07-16" data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-07-16" data-setting="practice">
       <div class="study-date">setting: practice </div>
-      <p style="margin-top:1rem;">
-      </p>
-      <video controls src="assets/260714_laser_field.mp4" style="width:100%;  margin-top:1rem;"></video>
+      <video controls src="assets/260714_laser_field.mp4" style="margin-top:1rem;"></video>
     </article>
 
-    <article data-date="2026-07-11" data-setting="field" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-07-11" data-setting="field">
       <div class="study-date">setting: field </div>
-      <p style="margin-top:1rem;">
-      </p>
-      <video controls src="assets/260711_light_scratch.mp4" style="width:100%;  margin-top:1rem;"></video>
+      <video controls src="assets/260711_light_scratch.mp4" style="margin-top:1rem;"></video>
     </article>
 
     <article data-date="2026-07-11" data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
@@ -116,11 +123,9 @@
       <img src="assets/260710_diffusion_1.jpg" style="width:100%; margin-top:1rem;"></img>
     </article>
 
-    <article data-date="2026-07-09" data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-07-09" data-setting="practice">
       <div class="study-date">setting: practice </div>
-      <p style="margin-top:1rem;">
-      </p>
-      <img src="assets/260709_inverted_abstraction.gif" style="width:100%; margin-top:1rem;"></img>
+      <img src="assets/260709_inverted_abstraction.gif" alt="" style="margin-top:1rem;">
     </article>
 
     <article data-date="2026-07-04 data-setting="journal" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
@@ -193,11 +198,9 @@
       </p>
     </article>
 
-    <article data-date="2026-01-16" data-setting="practice" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
+    <article class="fn-entry" data-date="2026-01-16" data-setting="practice">
       <div class="study-date">setting: practice </div>
-      <p style="margin-top:1rem;">
-      </p>
-      <video controls src="assets/260116_light_breaking.mp4" style="width:100%;  margin-top:1rem;"></video>
+       <video controls playsinline src="assets/260116_light_breaking.mp4" style="margin-top:1rem;"></video>
     </article>
 
     <article data-date="2025-12-28" data-setting="journal" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--veil);">
