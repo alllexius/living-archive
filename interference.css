@@ -1,13 +1,10 @@
 /* ============================================================
    interference.css
-   Loads AFTER style.css. Additive only — redefines nothing
-   from your palette. Every colour below is one of your
-   existing variables.
-
+  
    Layer order (z-index), lowest first:
      -1   #field-canvas    the interference field
       0   page content
-    999   #cursor          your drawn cursor
+    999   #cursor          drawn cursor
    8000   #centre-nav      inverts with the page
    8200   #site-title      inverts with the page
    9000   #invert-veil     the inversion itself
