@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alexius Odom">
   <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
   <meta name="rights" content="All content on this site is the intellectual property 
                                of Alexius Odom. Unauthorized reproduction, distribution, 
@@ -11,24 +12,28 @@
 <!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected 
   under U.S. copyright law. Unauthorized use is prohibited. 
   -->
-  <title>Contact — A Living Archive</title>
-  <link rel="icon" href="assets/favicon.png" type="image/x-icon">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="page">
+  
+<canvas id="field-canvas" aria-hidden="true"></canvas>
 
-  <header class="site-head">
-    <div class="site-name">A Living Archive</div>
-    <nav class="site-nav">
-      <a href="index.html">Condition</a>
-      <a href="archive.html">Archive</a>
-      <a href="field-notes.html">Field Notes</a>
-      <a href="contact.html" aria-current="page">Contact</a>
-    </nav>
-  </header>
+<a href="index.html" id="site-title">Alexius</a>
 
-  <main class="prose">
+<h1 id="page-title">Contact</h1>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html" aria-current="page">Field Notes</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
+
+  <main class="fn-stage">
     <h1>Contact</h1>
 
     <p>
@@ -41,16 +46,9 @@
 
   </main>
 
-  <div></div>
-
-  <footer class="site-foot">
-    Alexius
-  </footer>
-
-</div>
-
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
+<script src="interference.js"></script>
 
 </body>
 </html>
