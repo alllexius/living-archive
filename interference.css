@@ -105,16 +105,40 @@
 #veil-btn:focus-visible { outline: 1px solid var(--bone); outline-offset: 4px; }
 
 
-/* ---- THE VEIL ---------------------------------------------- */
+/* ---- THE VEIL ----------------------------------------------
+   Two elements now, not one. The clip-path animates on the
+   wrapper; the filter sits on a child that never changes.
+   Animating clip-path directly on a backdrop-filtered element
+   makes the browser recompute the filtered region every frame —
+   that is where the strobe on expansion came from. It only
+   happened opening because a zero-area element has no composited
+   layer to begin with, so one gets built mid-animation.
+
+   invert(1) grayscale(1) rather than invert(1) alone. A pure
+   inversion sends your soft greens to electric magenta. Adding
+   grayscale collapses the inverted state to tone only, which is
+   rule 1 of style.css taken to its limit — the archive refuses
+   hue completely on the other side of the button. Order is
+   irrelevant: grayscale is linear and invert affine, so
+   gray(1-C) and 1-gray(C) are the same value. */
 #invert-veil {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
-  -webkit-backdrop-filter: invert(1);
-  backdrop-filter: invert(1);
-  clip-path: circle(0% at 50% 35px);
+  /* Not 0%. A 3px radius keeps the layer alive between states and
+     sits entirely beneath the 34px button. */
+  clip-path: circle(3px at 50% 35px);
   transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
+  will-change: clip-path;
+}
+#invert-veil::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: invert(1) grayscale(1);
+  backdrop-filter: invert(1) grayscale(1);
+  transform: translateZ(0);
 }
 #invert-veil.on      { clip-path: circle(155% at 50% 35px); }
 #invert-veil.no-anim { transition: none; }
@@ -215,10 +239,13 @@ a.bloom {
   border-top: 1px solid var(--veil);
 }
 
-/* -- live -- */
+/* -- live --
+   Fixed height, not min-height: the stage is exactly the viewport
+   and cannot grow, so the page never scrolls. Everything inside
+   is capped to fit rather than being allowed to push past. */
 .fn-stage.is-live {
-  min-height: 100vh;
-  min-height: 100svh;
+  height: 100vh;
+  height: 100svh;
   padding: 0;
   overflow: hidden;
   touch-action: pan-y;
@@ -231,7 +258,7 @@ a.bloom {
   top: 50%;
   transform: translate(-50%, -50%);
   width: min(86vw, 34em);
-  max-height: 80vh;
+  max-height: 72vh;
   overflow-y: auto;
   opacity: 0;
   pointer-events: none;
@@ -243,9 +270,10 @@ a.bloom {
   pointer-events: auto;
   z-index: 2;
 }
-/* Media is capped so a tall frame never runs past the stage. */
+/* 60vh leaves a clear band beneath the work for the standing
+   line, so the two never sit level with each other. */
 .fn-stage.is-live .fn-entry img,
-.fn-stage.is-live .fn-entry video { max-height: 68vh; width: auto; }
+.fn-stage.is-live .fn-entry video { max-height: 60vh; width: auto; }
 
 /* The adjacent entry, ghosted in when the pointer nears an edge.
    That is the whole affordance: no arrow, no counter, no
@@ -274,20 +302,24 @@ a.bloom {
   .fn-stage.is-live .fn-entry { width: 88vw; }
 }
 
-/* The standing line. */
+/* The standing line, beneath the work rather than beside it.
+   The entry above is capped at 60vh so the two never meet. */
 .fn-foot {
   position: fixed;
-  left: 5vw;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 1.4rem;
   z-index: 8100;
   font-family: var(--data);
   font-size: 0.68rem;
   letter-spacing: 0.14em;
   color: var(--ash);
+  text-align: center;
+  white-space: nowrap;
   pointer-events: none;
 }
 @media (max-width: 44rem) {
-  .fn-foot { left: 6vw; font-size: 0.6rem; }
+  .fn-foot { font-size: 0.54rem; letter-spacing: 0.1em; }
 }
 
 
