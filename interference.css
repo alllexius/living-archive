@@ -89,7 +89,17 @@
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.11);
-  background: rgba(255,255,255,0.045);
+  
+  /* No backdrop-filter. A radial gradient reads as a lit dome
+     without sampling anything behind it — which means it no
+     longer nests inside the veil's filter. */
+   
+  background:
+    radial-gradient(circle at 50% 32%,
+      rgba(255,255,255,0.13) 0%,
+      rgba(255,255,255,0.05) 45%,
+      rgba(255,255,255,0.02) 100%);
+   
   -webkit-backdrop-filter: blur(7px) saturate(115%);
   backdrop-filter: blur(7px) saturate(115%);
   box-shadow:
@@ -121,28 +131,41 @@
    hue completely on the other side of the button. Order is
    irrelevant: grayscale is linear and invert affine, so
    gray(1-C) and 1-gray(C) are the same value. */
+
 #invert-veil {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
-  /* Not 0%. A 3px radius keeps the layer alive between states and
-     sits entirely beneath the 34px button. */
-  clip-path: circle(3px at 50% 35px);
-  transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
-  will-change: clip-path;
+  overflow: hidden;
 }
 #invert-veil::before {
   content: "";
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 35px;
+  width: 260vmax;
+  height: 260vmax;
+  margin: -130vmax 0 0 -130vmax;
+  border-radius: 50%;
   -webkit-backdrop-filter: invert(1) grayscale(1);
-  /* backdrop-filter: invert(1) grayscale(1); */
-   background: rgba (255, 255, 255, 0.4);
-  transform: translateZ(0);
+  backdrop-filter: invert(1) grayscale(1);
+
+  /* THE FILTER WIDTH. Your 0.3 is literally this: hard core to
+     70%, falling to nothing at 100%. Lower the 70% to soften
+     further. clip-path could never do this — it is a binary
+     boundary by definition, which is why the edge was in focus. */
+  -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+
+  /* scale, not clip-path: composited on the GPU, never touches
+     layout. 0.001 rather than 0 so the layer is never destroyed
+     and rebuilt mid-animation. */
+  transform: scale(0.001);
+  transition: transform 2000ms cubic-bezier(.42, 0, .28, 1);
 }
-#invert-veil.on      { clip-path: circle(155% at 50% 35px); }
-#invert-veil.no-anim { transition: none; }
+#invert-veil.on::before      { transform: scale(1); }
+#invert-veil.no-anim::before { transition: none; }
 
 
 /* ---- CENTRE NAV -------------------------------------------- */
