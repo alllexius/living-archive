@@ -282,6 +282,16 @@
      permanent, and nothing reflows: text-shadow and filter both
      paint outside the box without moving a single line.
 
+     Each link carries its own progress. Crossing from one to
+     another leaves the first retreating on its own 1.8s curve
+     while the second advances on its 4.5s one — they overlap,
+     the way two afterimages would.
+
+     This was a single shared counter, which produced exactly the
+     wrong thing: the first snapped to zero on contact with the
+     second, and handed over its accumulated brightness, so the
+     second appeared to arrive almost fully lit.
+
      Your existing CSS afterimage — colour in at 0.15s, out over
      4s — still runs underneath, on different properties. The
      bloom is what happens during contact; the afterimage is
@@ -292,22 +302,30 @@
 
     var ATTACK  = 4500;
     var RELEASE = 1800;
+    var MAX_DT  = 50;   // A backgrounded tab hands back a gap of
+                        // minutes on return. Without this cap the
+                        // bloom would snap instead of resume.
 
-    var links = document.querySelectorAll(".prose a, a.bloom");
+    // Matches the selector in interference.css. It did not before:
+    // .fn-entry a was styled for bloom but never wired to it.
+    var links = document.querySelectorAll(".prose a, .fn-entry a, a.bloom");
     if (!links.length) return;
 
-    var held = null;
-    var progress = 0;
-    var target = null;
+    var active = [];      // [{ el, p, held }] — only what is moving
+    var running = false;
     var last = 0;
 
-    Array.prototype.forEach.call(links, function (a) {
-      a.addEventListener("mouseenter", function () {
-        if (target && target !== a) clear(target);
-        held = a; target = a;
-      });
-      a.addEventListener("mouseleave", function () { held = null; });
-    });
+    // One record per element, created on first contact. Re-entering
+    // something still retreating finds its record and picks up from
+    // where it got to, rather than restarting from dark.
+    function stateFor(el) {
+      for (var i = 0; i < active.length; i++) {
+        if (active[i].el === el) return active[i];
+      }
+      var s = { el: el, p: 0, held: false };
+      active.push(s);
+      return s;
+    }
 
     function clear(el) {
       el.style.textShadow = "";
@@ -328,19 +346,41 @@
     }
 
     function tick(ms) {
-      var dt = last ? ms - last : 16;
+      var dt = last ? Math.min(ms - last, MAX_DT) : 16;
       last = ms;
 
-      if (held)      progress = Math.min(1, progress + dt / ATTACK);
-      else if (target) progress = Math.max(0, progress - dt / RELEASE);
-
-      if (target) {
-        paint(target, progress);
-        if (!held && progress <= 0) { clear(target); target = null; }
+      // Backwards: entries are dropped from the middle as they
+      // finish retreating.
+      for (var i = active.length - 1; i >= 0; i--) {
+        var s = active[i];
+        s.p = s.held
+          ? Math.min(1, s.p + dt / ATTACK)
+          : Math.max(0, s.p - dt / RELEASE);
+        paint(s.el, s.p);
+        if (!s.held && s.p <= 0) active.splice(i, 1);
       }
+
+      if (active.length) requestAnimationFrame(tick);
+      else running = false;      // nothing moving, stop the loop
+    }
+
+    function run() {
+      if (running) return;
+      running = true;
+      last = 0;
       requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
+
+    Array.prototype.forEach.call(links, function (a) {
+      a.addEventListener("mouseenter", function () {
+        stateFor(a).held = true;
+        run();
+      });
+      a.addEventListener("mouseleave", function () {
+        stateFor(a).held = false;
+        run();
+      });
+    });
   })();
 
 
@@ -474,5 +514,43 @@
   document.addEventListener("dragstart", function (e) {
     if (e.target.closest("img, video")) e.preventDefault();
   });
+
+
+  /* ==========================================================
+     6. THE ADDRESS
+
+     Assembled at runtime. Nothing in the served file is a valid
+     address: both halves are ROT13'd and the @ never appears in
+     the source at all, so a regex sweep finds nothing to take.
+
+     ROT13 is its own inverse, so this same function is what you
+     use to encode a new address. Run it in the console on the
+     string you want, put the result in data-a and data-b.
+
+     Without JS the link stays inert text. That is a real cost,
+     and the reason it is acceptable here is that Are.na sits
+     directly above it as a second way through.
+     ========================================================== */
+  (function address() {
+    var nodes = document.querySelectorAll(".veiled-mail");
+    if (!nodes.length) return;
+
+    function rot13(s) {
+      return s.replace(/[a-z]/gi, function (c) {
+        var base = c <= "Z" ? 65 : 97;
+        return String.fromCharCode((c.charCodeAt(0) - base + 13) % 26 + base);
+      });
+    }
+
+    Array.prototype.forEach.call(nodes, function (el) {
+      var user = rot13(el.getAttribute("data-a") || "");
+      var host = rot13(el.getAttribute("data-b") || "");
+      if (!user || !host) return;
+
+      var addr = user + String.fromCharCode(64) + host;
+      el.setAttribute("href", "mailto:" + addr);
+      el.textContent = addr;
+    });
+  })();
 
 })();
