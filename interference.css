@@ -137,7 +137,8 @@
   position: absolute;
   inset: 0;
   -webkit-backdrop-filter: invert(1) grayscale(1);
-  backdrop-filter: invert(1) grayscale(1);
+  /* backdrop-filter: invert(1) grayscale(1); */
+   background: rgba (255, 255, 255, 0.4);
   transform: translateZ(0);
 }
 #invert-veil.on      { clip-path: circle(155% at 50% 35px); }
