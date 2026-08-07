@@ -148,8 +148,8 @@
   height: 260vmax;
   margin: -130vmax 0 0 -130vmax;
   border-radius: 50%;
-  -webkit-backdrop-filter: invert(1) grayscale(1);
-  backdrop-filter: invert(1) grayscale(1);
+  -webkit-backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg);
+  backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg);
 
   /* THE FILTER WIDTH. Your 0.3 is literally this: hard core to
      70%, falling to nothing at 100%. Lower the 70% to soften
