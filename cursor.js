@@ -1,18 +1,16 @@
 /* ============================================================
    cursor.js — the drawn circle that follows the pointer.
-   The only JavaScript on this site. ~45 lines. Read all of it.
-
+   
    How it works:
    1. If this script runs, it adds class "has-cursor" to <html>.
-      Only then does the CSS hide the real cursor. If JS fails
-      or is disabled, visitors keep their normal cursor.
+      Only then does the CSS hide the real cursor. 
    2. On touch devices (no pointer), it does nothing at all.
    3. On mousemove, the #cursor element is moved to the pointer,
       and its image is rotated toward the direction of travel.
    ============================================================ */
 
 (function () {
-  // Touch screens have no cursor. Do nothing there.
+  // Touch screens have no cursor. 
   if (window.matchMedia("(pointer: coarse)").matches) return;
 
   var el = document.getElementById("cursor");
@@ -28,7 +26,8 @@
   /* ---- SPEED -> LIGHT MAPPING --------------------------------
      The circle's tone responds to how the visitor moves.
 
-     Flip the boolean, refresh, judge with your eyes.          */
+     Flip the boolean, refresh.          */
+   
   var SPEED_BRIGHTENS = false;
 
   var speed = 0;              // smoothed px-per-event, decays when idle
