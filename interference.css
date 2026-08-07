@@ -130,7 +130,6 @@
      sits entirely beneath the 34px button. */
   clip-path: circle(3px at 50% 35px);
   transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
-  will-change: clip-path;
 }
 #invert-veil::before {
   content: "";
@@ -138,7 +137,6 @@
   inset: 0;
   -webkit-backdrop-filter: invert(1) grayscale(1);
   backdrop-filter: invert(1) grayscale(1);
-  transform: translateZ(0);
 }
 #invert-veil.on      { clip-path: circle(155% at 50% 35px); }
 #invert-veil.no-anim { transition: none; }
