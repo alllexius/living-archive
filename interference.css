@@ -1,4 +1,4 @@
-/* interference.css — v5 */
+/* interference.css — v6 */
 /* ============================================================
    interference.css
    Loads AFTER style.css. Additive only — redefines nothing
@@ -35,7 +35,7 @@
 #site-title,
 #page-title {
   position: fixed;
-  top: 1.15rem;
+  top: 2rem;
   z-index: 8200;
   margin: 0;
   font-family: var(--data);
@@ -90,9 +90,16 @@
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.11);
-  background: rgba(255,255,255,0.045);
-  -webkit-backdrop-filter: blur(7px) saturate(115%);
-  backdrop-filter: blur(7px) saturate(115%);
+  /* NO backdrop-filter here. The veil below carries one, and a
+     filter nested inside another filter is what caused the
+     strobe — on mobile it can stop the inner one rendering at
+     all. A radial gradient reads as a lit dome without sampling
+     anything behind it. */
+  background:
+    radial-gradient(circle at 50% 32%,
+      rgba(255,255,255,0.13) 0%,
+      rgba(255,255,255,0.05) 45%,
+      rgba(255,255,255,0.02) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.17),
     inset 0 -1px 0 rgba(0,0,0,0.30),
@@ -107,42 +114,52 @@
 
 
 /* ---- THE VEIL ----------------------------------------------
-   Two elements now, not one. The clip-path animates on the
-   wrapper; the filter sits on a child that never changes.
-   Animating clip-path directly on a backdrop-filtered element
-   makes the browser recompute the filtered region every frame —
-   that is where the strobe on expansion came from. It only
-   happened opening because a zero-area element has no composited
-   layer to begin with, so one gets built mid-animation.
+   The filtered element scales; it is never clipped. clip-path is
+   a binary boundary by definition, so it can never feather — the
+   soft edge has to come from a mask instead. scale() is also
+   composited on the GPU and never touches layout.
 
-   invert(1) grayscale(1) rather than invert(1) alone. A pure
-   inversion sends your soft greens to electric magenta. Adding
-   grayscale collapses the inverted state to tone only, which is
-   rule 1 of style.css taken to its limit — the archive refuses
-   hue completely on the other side of the button. Order is
-   irrelevant: grayscale is linear and invert affine, so
-   gray(1-C) and 1-gray(C) are the same value. */
+   invert(1) alone sent your soft greens to electric magenta.
+   Grayscale killed that, but it also killed the point: a negative
+   afterimage IS a complementary hue, which is the thing the whole
+   practice is about. saturate(0.62) keeps the complement and
+   drops the chroma to where an afterimage actually presents.
+   hue-rotate(-8deg) corrects for perceptual complements not
+   sitting exactly 180 degrees apart in sRGB.
+
+   Tune saturate: toward 0.4 if it shouts, toward 0.85 if timid. */
 #invert-veil {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
-  /* Not 0%. A 3px radius keeps the layer alive between states and
-     sits entirely beneath the 34px button. */
-  clip-path: circle(3px at 50% 35px);
-  transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
-  will-change: clip-path;
+  overflow: hidden;
 }
 #invert-veil::before {
   content: "";
   position: absolute;
-  inset: 0;
-  -webkit-backdrop-filter: invert(1) grayscale(1);
-  backdrop-filter: invert(1) grayscale(1);
-  transform: translateZ(0);
+  left: 50%;
+  top: 35px;
+  width: 260vmax;
+  height: 260vmax;
+  margin: -130vmax 0 0 -130vmax;
+  border-radius: 50%;
+
+  -webkit-backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg);
+  backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg);
+
+  /* THE FILTER WIDTH. Opaque core to 70% of the radius, feathering
+     to nothing at the rim. Lower the 70% to soften further. */
+  -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+
+  /* 0.001 rather than 0: the layer is never destroyed and rebuilt
+     mid-animation. */
+  transform: scale(0.001);
+  transition: transform 2000ms cubic-bezier(.42, 0, .28, 1);
 }
-#invert-veil.on      { clip-path: circle(155% at 50% 35px); }
-#invert-veil.no-anim { transition: none; }
+#invert-veil.on::before      { transform: scale(1); }
+#invert-veil.no-anim::before { transition: none; }
 
 
 /* ---- CENTRE NAV -------------------------------------------- */
