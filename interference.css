@@ -1,3 +1,4 @@
+/* interference.css — v5 */
 /* ============================================================
    interference.css
    Loads AFTER style.css. Additive only — redefines nothing
@@ -6,11 +7,11 @@
    Layer order (z-index), lowest first:
      -1   #field-canvas    the interference field
       0   page content
-    999   #cursor          the drawn cursor
+    999   #cursor          your drawn cursor
    8000   #centre-nav      inverts with the page
    8200   #site-title / #page-title
    9000   #invert-veil     the inversion itself
-   9100   #veil-btn        never inverted; operates as a mirror
+   9100   #veil-btn        never inverted; mirrors state itself
    ============================================================ */
 
 
@@ -28,9 +29,9 @@
 
 /* ---- THE TWO MARKS -----------------------------------------
    Name left, page right. Both on the same baseline, both in the
-   data font 
-*/
-
+   data font — they are instrument labels, not headings. The
+   name shares its left edge (5vw) with the standing line at the
+   bottom of the page, so the left margin holds one axis. */
 #site-title,
 #page-title {
   position: fixed;
@@ -49,9 +50,8 @@
 #page-title { right: 5vw; text-align: right; }
 #site-title:hover { color: var(--lit); }
 
-/* The descriptive line, if used. 
-*/
-
+/* The descriptive line, if you keep one. Delete the element to
+   drop it — nothing else depends on it. */
 #page-note {
   position: fixed;
   top: 2.6rem;
@@ -75,8 +75,9 @@
 
 
 /* ---- THE BUTTON --------------------------------------------
- */
-
+   Above the veil, so it is never inverted by it; it mirrors the
+   state itself, which means hover always shows you the state you
+   are about to enter. */
 #veil-btn {
   position: fixed;
   top: 1.05rem;
@@ -89,17 +90,7 @@
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.11);
-  
-  /* No backdrop-filter. A radial gradient reads as a lit dome
-     without sampling anything behind it. 
-   */
-   
-  background:
-    radial-gradient(circle at 50% 32%,
-      rgba(255,255,255,0.13) 0%,
-      rgba(255,255,255,0.05) 45%,
-      rgba(255,255,255,0.02) 100%);
-   
+  background: rgba(255,255,255,0.045);
   -webkit-backdrop-filter: blur(7px) saturate(115%);
   backdrop-filter: blur(7px) saturate(115%);
   box-shadow:
@@ -118,45 +109,40 @@
 /* ---- THE VEIL ----------------------------------------------
    Two elements now, not one. The clip-path animates on the
    wrapper; the filter sits on a child that never changes.
+   Animating clip-path directly on a backdrop-filtered element
+   makes the browser recompute the filtered region every frame —
+   that is where the strobe on expansion came from. It only
+   happened opening because a zero-area element has no composited
+   layer to begin with, so one gets built mid-animation.
 
-   Soft inversion to prevent soft greens from becoming electric magenta. 
-*/
-
+   invert(1) grayscale(1) rather than invert(1) alone. A pure
+   inversion sends your soft greens to electric magenta. Adding
+   grayscale collapses the inverted state to tone only, which is
+   rule 1 of style.css taken to its limit — the archive refuses
+   hue completely on the other side of the button. Order is
+   irrelevant: grayscale is linear and invert affine, so
+   gray(1-C) and 1-gray(C) are the same value. */
 #invert-veil {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
-  overflow: hidden;
+  /* Not 0%. A 3px radius keeps the layer alive between states and
+     sits entirely beneath the 34px button. */
+  clip-path: circle(3px at 50% 35px);
+  transition: clip-path 2000ms cubic-bezier(.42, 0, .28, 1);
+  will-change: clip-path;
 }
 #invert-veil::before {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 35px;
-  width: 260vmax;
-  height: 260vmax;
-  margin: -130vmax 0 0 -130vmax;
-  border-radius: 50%;
-  -webkit-backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg) contrast(1.2);
-  backdrop-filter: invert(1) saturate(0.62) hue-rotate(-8deg) contrast(1.2);
-
-  /* THE FILTER WIDTH. The 70% translates from 
-   TouchDesigner logic of using a Filter Width around 0.3
-   */
-   
-  -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
-
-  /* scale, not clip-path: composited on the GPU, never touches
-     layout. 0.001 rather than 0 so the layer is never destroyed
-     and rebuilt mid-animation. */
-   
-  transform: scale(0.001);
-  transition: transform 2000ms cubic-bezier(.42, 0, .28, 1);
+  inset: 0;
+  -webkit-backdrop-filter: invert(1) grayscale(1);
+  backdrop-filter: invert(1) grayscale(1);
+  transform: translateZ(0);
 }
-#invert-veil.on::before      { transform: scale(1); }
-#invert-veil.no-anim::before { transition: none; }
+#invert-veil.on      { clip-path: circle(155% at 50% 35px); }
+#invert-veil.no-anim { transition: none; }
 
 
 /* ---- CENTRE NAV -------------------------------------------- */
@@ -197,9 +183,8 @@
 #centre-nav.open a:nth-child(5) { transition-delay: 860ms; }
 
 /* The nav opens where the work is, so the work withdraws while
-   it is open rather than being covered by it.
-*/
-
+   it is open rather than being covered by it. Reading and
+   navigating are two states, not one crowded one. */
 .fn-stage,
 .page,
 .fn-foot {
@@ -215,9 +200,11 @@ body.nav-open .fn-foot {
 
 
 /* ---- BLOOM -------------------------------------------------
-   JS drives filter and text-shadow. 
- */
-
+   JS drives filter and text-shadow. Both paint outside the box
+   without reflowing anything. Your 4s afterimage decay on colour
+   still runs underneath, on different properties: the bloom is
+   what happens during contact, the afterimage is what remains
+   after it. */
 .prose a,
 .fn-entry a,
 a.bloom {
@@ -228,9 +215,8 @@ a.bloom {
 
 /* ---- SECTION HEADING ---------------------------------------
    #page-title is the h1 on every page now, so a heading inside
-   the content is an h2. 
-*/
-
+   the content is an h2. This carries the weight the old h1 had
+   in style.css. */
 .prose h2 {
   grid-column: 1 / -1;
   font-weight: normal;
@@ -242,11 +228,15 @@ a.bloom {
 
 
 /* ---- THE STAGE ---------------------------------------------
-   With JS the script adds .is-live and one entry is held at a
-   time. Every entry is absolutely centered in both cases, so
-   moving between them changes opacity only. Nothing reflows. 
-*/
+   Two states, deliberately.
 
+   Without JS the stage is inert: entries stack and the page
+   scrolls, exactly as before. This is the same contract
+   cursor.js makes — if the script fails, nothing is lost.
+
+   With JS the script adds .is-live and one entry is held at a
+   time. Every entry is absolutely centred in both cases, so
+   moving between them changes opacity only. Nothing reflows. */
 .fn-stage {
   position: relative;
   padding: 7rem 5vw 6rem;
@@ -265,9 +255,9 @@ a.bloom {
 }
 
 /* -- live --
-   Fixed height, not min-height. 
-*/
-
+   Fixed height, not min-height: the stage is exactly the viewport
+   and cannot grow, so the page never scrolls. Everything inside
+   is capped to fit rather than being allowed to push past. */
 .fn-stage.is-live {
   height: 100vh;
   height: 100svh;
@@ -295,18 +285,14 @@ a.bloom {
   pointer-events: auto;
   z-index: 2;
 }
-
 /* 60vh leaves a clear band beneath the work for the standing
-   line, so the two never sit level with each other. 
-*/
-
+   line, so the two never sit level with each other. */
 .fn-stage.is-live .fn-entry img,
 .fn-stage.is-live .fn-entry video { max-height: 60vh; width: auto; }
 
-/* The adjacent entry: no arrow, no counter, no
-   instruction. The space shows where it opens. 
-*/
-
+/* The adjacent entry, ghosted in when the pointer nears an edge.
+   That is the whole affordance: no arrow, no counter, no
+   instruction. The space shows you where it opens. */
 .fn-ghost {
   position: absolute;
   top: 50%;
@@ -324,18 +310,15 @@ a.bloom {
 .fn-ghost img,
 .fn-ghost video { display: block; width: 100%; height: auto; }
 
-/* On touch the ghost is dropped. 
-*/
-
+/* On touch the ghost is dropped — swipe is the affordance there,
+   and it is already native. */
 @media (max-width: 44rem) {
   .fn-ghost { display: none; }
   .fn-stage.is-live .fn-entry { width: 88vw; }
 }
 
 /* The standing line, beneath the work rather than beside it.
-   The entry above is capped at 60vh so the two never meet. 
-*/
-
+   The entry above is capped at 60vh so the two never meet. */
 .fn-foot {
   position: fixed;
   left: 50%;
@@ -355,11 +338,64 @@ a.bloom {
 }
 
 
-/* ---- IMAGE HANDLING ----------------------------------------
-   Right-click is
-   blocked in JS. Neither stops devtools; nothing does. 
-*/
+/* ---- ZOOM ---------------------------------------------------
+   Sits above the content and the nav, below the veil — so a
+   zoomed image inverts with everything else when the button is
+   pressed. The layer has no background of its own: the page
+   withdraws behind it instead, so the interference field stays
+   visible around the image rather than being covered by a slab.
 
+   Three seconds each way. Opacity and scale run together on the
+   same curve, so the image surfaces rather than arrives. */
+#zoom-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 8600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 3000ms ease;
+}
+#zoom-layer.on { opacity: 1; pointer-events: auto; }
+.has-cursor #zoom-layer { cursor: none; }
+
+#zoom-layer img {
+  display: block;
+  max-width: 92vw;
+  max-height: 92vh;
+  transform: scale(0.86);
+  transition: transform 3000ms cubic-bezier(.22, .61, .36, 1);
+  will-change: transform;
+}
+#zoom-layer.on img { transform: scale(1); }
+
+/* Same withdrawal as the nav, deeper and softer. */
+body.zoom-open .fn-stage,
+body.zoom-open .page,
+body.zoom-open .fn-foot {
+  opacity: 0.06;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+/* The drawn cursor was at 999, which put it beneath the nav and
+   would have put it beneath a zoomed image. Above both now, and
+   still below the veil so it keeps inverting. */
+#cursor { z-index: 8900; }
+
+/* The archive figure is now a zoom target, so it should read as
+   one. The overlay in style.css still blocks the image itself;
+   the listener sits on the figure and fires through it. */
+.study figure { cursor: zoom-in; }
+.has-cursor .study figure { cursor: none; }
+
+
+/* ---- IMAGE HANDLING ----------------------------------------
+   Replaces the figure::after overlay, which only ever applied on
+   pages using <figure> — Field Notes never did. Right-click is
+   blocked in JS. Neither stops devtools; nothing does. */
 img, video {
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
@@ -370,14 +406,14 @@ img, video {
 /* ---- REDUCED MOTION ----------------------------------------
    The field freezes to a still frame (handled in JS) and bloom
    is disabled. The inversion stays: it is a luminance change,
-   not motion, and it is the point of the button. 
-*/
-
+   not motion, and it is the point of the button. */
 @media (prefers-reduced-motion: reduce) {
   #centre-nav,
   #centre-nav a,
   .fn-entry,
   .fn-ghost,
   .fn-stage,
+  #zoom-layer,
+  #zoom-layer img,
   .page { transition-duration: 1ms; }
 }
