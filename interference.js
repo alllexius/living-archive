@@ -1,4 +1,4 @@
-/* interference.js — v5 */
+/* interference.js — v6 */
 /* ============================================================
    interference.js
    Loads AFTER cursor.js. Seven independent parts; each checks
@@ -238,24 +238,11 @@
     var nav  = document.getElementById("centre-nav");
     if (!btn || !vail) return;
 
-    var KEY = "field.inverted";
-
-    function stored() {
-      try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
-    }
-    function store(on) {
-      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) {}
-    }
-
-    var on = stored();
-
-    // Restore without animating.
-    if (on) {
-      vail.classList.add("no-anim", "on");
-      btn.classList.add("is-inverted");
-      void vail.offsetWidth;                 // force reflow
-      vail.classList.remove("no-anim");
-    }
+    // No persistence. Carrying the state across pages desynced the
+    // button: the nav was force-closed on arrival while `on` stayed
+    // true, so the next click reverted the page instead of opening
+    // the menu. Every page opens in the default state.
+    var on = false;
 
     function set(next) {
       on = next;
@@ -266,7 +253,6 @@
       // The page withdraws while the nav is open rather than being
       // covered by it — see interference.css, body.nav-open.
       document.body.classList.toggle("nav-open", on);
-      store(on);
     }
 
     btn.addEventListener("click", function () {
@@ -280,9 +266,6 @@
       if (e.key === "Escape" && on) set(false);
     });
 
-    // The nav is open only while the page is inverted, and a page
-    // load never arrives with it open — you re-open it deliberately.
-    if (on && nav) nav.classList.remove("open");
   })();
 
 
