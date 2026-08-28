@@ -184,13 +184,6 @@
   /* ==========================================================
      2. THE VEIL
 
-     One click: the page inverts, opening as a circle from the
-     button, and the nav rises from the centre. Click again and
-     the circle closes back into the button.
-
-     The state is stored, so it carries across pages. On arrival
-     it is applied with transitions off — otherwise every page
-     load would replay the two seconds.
      ========================================================== */
   (function veil() {
     var btn  = document.getElementById("veil-btn");
@@ -198,11 +191,23 @@
     var nav  = document.getElementById("centre-nav");
     if (!btn || !vail) return;
 
-    // No persistence. Carrying the state across pages desynced the
-    // button: the nav was force-closed on arrival while `on` stayed
-    // true, so the next click reverted the page instead of opening
-    // the menu. Every page opens in the default state.
-    var on = false;
+    var KEY = "field.inverted";
+
+    function stored() {
+      try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+    }
+    function store(on) {
+      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) {}
+    }
+
+    var on = stored();
+
+    if (on) {
+      vail.classList.add("no-anim", "on");
+      btn.classList.add("is-inverted");
+      void vail.offsetWidth;                 // force reflow
+      vail.classList.remove("no-anim");
+    }
 
     function set(next) {
       on = next;
@@ -210,13 +215,11 @@
       btn.classList.toggle("is-inverted", on);
       btn.setAttribute("aria-expanded", on ? "true" : "false");
       if (nav) nav.classList.toggle("open", on);
-      // The page withdraws while the nav is open rather than being
-      // covered by it — see interference.css, body.nav-open.
       document.body.classList.toggle("nav-open", on);
+      store(on);
     }
 
     btn.addEventListener("click", function () {
-      ZOOM.close();          // the nav opens where the zoom sits
       FIELD.hold();
       setTimeout(FIELD.release, 2150);   // transition is 2000ms
       set(!on);
@@ -226,7 +229,9 @@
       if (e.key === "Escape" && on) set(false);
     });
 
+    if (on && nav) nav.classList.remove("open");
   })();
+
 
 
   /* ==========================================================
