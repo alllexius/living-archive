@@ -1,20 +1,16 @@
-/* interference.js — v6 */
 /* ============================================================
    interference.js
-   Loads AFTER cursor.js. Seven independent parts; each checks
-   for its own elements and exits quietly if they are absent,
-   so the same file can go on every page.
+   Loads AFTER cursor.js
 
-     1. THE FIELD      WebGL interference background
-     2. THE VEIL       inversion + centre nav
+     1. THE FIELD      WebGL background
+     2. THE VEIL       inversion + center nav
      3. BLOOM          links advance on hold, retreat on release
      4. ZOOM           an image surfaces over a withdrawn page
      5. THE STAGE      one entry at a time
      6. IMAGES         right-click off
      7. THE ADDRESS    assembled at runtime
 
-   Nothing here touches cursor.js. It listens on mousemove too;
-   both are passive listeners on different elements.
+   Nothing here touches cursor.js. 
    ============================================================ */
 
 (function () {
@@ -22,15 +18,7 @@
 
   var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var COARSE  = window.matchMedia("(pointer: coarse)").matches;
-
-  // The veil holds the field still while it animates. A canvas
-  // repainting every frame underneath a backdrop-filter forces
-  // the filtered region to be recaptured every frame with it —
-  // one of the three things feeding the strobe.
   var FIELD = { hold: function () {}, release: function () {} };
-
-  // Assigned by section 4. Declared here because the stage and
-  // the veil both need to reach it.
   var ZOOM = {
     open:   function () {},
     close:  function () {},
@@ -42,20 +30,8 @@
      1. THE FIELD
 
      Four circular ramps, each a tent (black > light > black)
-     over distance from its own centre. Two radiate outward,
-     two inward. Phases run at four frequencies chosen so their
-     periods share no common multiple you will ever sit through
-     — 77s, 141s, 52s, 244s. They never realign.
-
-     A fifth ramp is centred on the pointer and multiplied in.
-
-     All five composite by multiply, then scale to a delta of
-     about +0.022 over eigengrau. Peak is roughly #1B1B22
-     against your #16161D. Below the threshold at which you can
-     be sure it is moving.
-
-     Centres are off-axis and left-weighted — the field obeys
-     rule 2 in style.css as much as the layout does.
+     over distance from its own center.
+     
      ========================================================== */
   (function field() {
     var canvas = document.getElementById("field-canvas");
@@ -63,7 +39,6 @@
 
     // preserveDrawingBuffer so the last frame survives while the
     // loop is held — without it the canvas may clear to black the
-    // moment drawing stops.
     var opts = { antialias: false, alpha: false, preserveDrawingBuffer: true };
     var gl = canvas.getContext("webgl", opts)
           || canvas.getContext("experimental-webgl", opts);
@@ -80,8 +55,6 @@
       "uniform vec2  u_ptr;",
 
       // Ordered 4x4 Bayer, formula form (no array indexing in WebGL1).
-      // This is the same dithering that fixed the export banding —
-      // it breaks up 8-bit quantisation on a near-black gradient.
       "float bayer2(vec2 a){ a = floor(a); return fract(a.x * 0.5 + a.y * a.y * 0.75); }",
       "float bayer4(vec2 a){ return bayer2(a * 0.5) * 0.25 + bayer2(a); }",
 
@@ -99,38 +72,25 @@
       "  float aspect = u_res.x / u_res.y;",
       "  uv.x *= aspect;",
 
-      // Four centres, off-axis, weighted left.
       "  vec2 c1 = vec2(0.26 * aspect, 0.68);",
       "  vec2 c2 = vec2(0.71 * aspect, 0.24);",
       "  vec2 c3 = vec2(0.12 * aspect, 0.19);",
       "  vec2 c4 = vec2(0.55 * aspect, 0.86);",
 
-      // Outward = phase advances. Inward = phase retreats.
       "  float r1 = ramp(uv, c1, 1.7,  u_t * 0.013);",
       "  float r2 = ramp(uv, c2, 2.4, -u_t * 0.0071);",
       "  float r3 = ramp(uv, c3, 1.3,  u_t * 0.0193);",
       "  float r4 = ramp(uv, c4, 3.1, -u_t * 0.0041);",
 
-      // The pointer field. Broad and slow; multiplied like the rest.
       "  float rp = ramp(uv, vec2(u_ptr.x * aspect, u_ptr.y), 1.15, u_t * 0.006);",
 
-      // Multiply composite. Each factor is lifted off zero so
-      // five multiplications do not crush the field to black.
       "  float v = mix(0.55, 1.0, r1);",
       "  v *= mix(0.55, 1.0, r2);",
       "  v *= mix(0.55, 1.0, r3);",
       "  v *= mix(0.60, 1.0, r4);",
-      // Pointer floor lowered 0.62 -> 0.58: the multiply you
-      // singled out now cuts deeper, so the field answers the
-      // cursor more than it answers the clock.
       "  v *= mix(0.58, 1.0, rp);",
 
       "  vec3 base  = vec3(0.0863, 0.0863, 0.1137);",  // #16161D
-      // AMPLITUDE. The one number to turn. 0.022 -> 0.0253 is the
-      // 15% you asked for; peak moves from about #1B1B22 to
-      // #1C1C23. Fifteen percent of a near-threshold value is
-      // still near threshold, so if it reads as too quiet this is
-      // the line to raise again.
       "  vec3 field = base + v * 0.0253;",
 
       "  field += (bayer4(gl_FragCoord.xy) - 0.5) / 255.0;",
