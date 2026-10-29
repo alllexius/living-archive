@@ -192,18 +192,13 @@
 
   <main class="prose req">
 
-    <!-- YOUR WORDS, if any. One or two lines, or nothing at all.
-         Left empty on purpose: the voice is yours. -->
-
     <div>
       <span class="field-label" id="req-cal-label">Date</span>
-      <!-- Drawn by the script below. -->
       <div id="req-cal" class="cal" role="group" aria-labelledby="req-cal-label"></div>
     </div>
 
     <fieldset style="margin-top:2.4rem;">
       <legend>Session</legend>
-      <!-- Filled from CONFIG.SESSIONS in the script below. -->
       <div id="req-sessions"></div>
     </fieldset>
 
@@ -238,7 +233,7 @@
 /* ============================================================
    THE REQUEST
 
-   Everything you will ever need to edit is in this first block.
+   Everything I will ever need to edit is in this first block.
    ============================================================ */
 
 var CONFIG = {
@@ -266,9 +261,8 @@ var CONFIG = {
 
   // Session start times, in order. These become the choices on
   // the page. Add, remove, or change them here only.
-  SESSIONS: ["17:30", "19:00"],
+  SESSIONS: ["17:30 CST", "19:00 CST"],
 
-  // First column of the calendar. 0 = Sunday, 1 = Monday.
   WEEK_STARTS: 0,
 
   // ROT13 of the address, same as the Contact page. No @ in the file.
@@ -483,8 +477,7 @@ var CONFIG = {
       "Name: ",
       "Email: ",
       "Phone: ",
-      "General location: ",
-      "Desired duration: ",
+      "Desired duration: (minimum 1 hour)",
       "",
       "Anything else: ",
       ""
