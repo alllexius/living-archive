@@ -263,6 +263,9 @@ var CONFIG = {
   // the page. Add, remove, or change them here only.
   SESSIONS: ["17:30 CST", "19:00 CST"],
 
+  // Weekdays never available. 0 = Sunday, 1 = Monday … 6 = Saturday.
+  CLOSED_DAYS: [0],
+  
   WEEK_STARTS: 0,
 
   // ROT13 of the address, same as the Contact page. No @ in the file.
@@ -331,6 +334,7 @@ var CONFIG = {
     if (s < earliest) return false;
     if (latest && s > latest) return false;
     if (away(s)) return false;
+    if (CONFIG.CLOSED_DAYS.indexOf(parse(s).getDay()) !== -1) return false;
     return true;
   }
 
