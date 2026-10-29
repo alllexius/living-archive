@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alexius Odom">
+
+  <!-- UNLISTED. Asks search engines not to index this page or follow
+       its links. Delete this line on the day it goes public, along
+       with adding it to the nav. Do NOT list this page in robots.txt:
+       robots.txt is public, so naming the page there announces it. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
+  <meta name="rights" content="All content on this site is the intellectual property
+                               of Alexius Odom. Unauthorized reproduction, distribution,
+                               or use is prohibited.">
+
+<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected
+  under U.S. copyright law. Unauthorized use is prohibited.
+  -->
+
+  <title>Alexius</title>
+  <link rel="icon" href="assets/favicon.png" type="image/x-icon">
+  <!-- Match these ?v= numbers to whatever your other pages use. -->
+  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="interference.css?v=7">
+
+  <style>
+    /* Page-specific. Kept here rather than in interference.css so
+       nothing shared gets regenerated or overwritten. */
+
+    .req label {
+      display: block;
+      font-family: var(--data);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ash);
+      margin-bottom: 0.6rem;
+    }
+
+    /* color-scheme: dark asks the browser to draw its native date
+       picker dark. Without it, the calendar opens as a white panel
+       — the same hole in the field the audio player was. */
+    .req input[type="date"] {
+      color-scheme: dark;
+      font-family: var(--data);
+      font-size: 0.95rem;
+      color: var(--bone);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--veil);
+      padding: 0.35rem 0;
+      min-width: 12em;
+    }
+    .req input[type="date"]:focus-visible {
+      outline: none;
+      border-bottom-color: var(--ash);
+    }
+
+    #req-note {
+      min-height: 1.6em;           /* reserve the line so nothing jumps */
+      margin-top: 0.8rem;
+      font-family: var(--data);
+      font-size: 0.75rem;
+    }
+
+    #req-send[aria-disabled="true"] {
+      color: var(--ash);
+      border-bottom-color: transparent;
+      pointer-events: none;
+    }
+
+    #req-fallback pre {
+      margin-top: 1rem;
+      font-family: var(--data);
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: var(--ash);
+      white-space: pre-wrap;
+      user-select: text;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="field-canvas" aria-hidden="true"></canvas>
+
+<a href="index.html" id="site-title">Alexius</a>
+
+<h1 id="page-title">Request</h1>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html">Field Notes</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
+
+
+<div class="page">
+
+  <main class="prose req">
+
+    <!-- YOUR WORDS, if any. One or two lines, or nothing at all.
+         I have left this empty on purpose: the voice is yours. -->
+
+    <p>
+      <label for="req-date">Date</label>
+      <input type="date" id="req-date">
+    </p>
+
+    <p id="req-note" class="quiet" aria-live="polite"></p>
+
+    <p style="margin-top:2.5rem;">
+      <a href="#" id="req-send" aria-disabled="true">Write the request</a>
+    </p>
+
+    <!-- Revealed only after the button is pressed, in case the
+         visitor has no mail app set up and nothing opened. -->
+    <div id="req-fallback" class="quiet" hidden style="margin-top:2.5rem;">
+      <p>If no email opened, write to <a id="req-addr" href="#"></a> with:</p>
+      <pre id="req-template"></pre>
+    </div>
+
+    <noscript>
+      <p class="quiet">Requests can also be sent through the <a href="contact.html">Contact</a> page.</p>
+    </noscript>
+
+  </main>
+
+  <div></div>
+
+</div>
+
+<div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
+<script src="cursor.js?v=7"></script>
+<script src="interference.js?v=7"></script>
+
+<script>
+/* ============================================================
+   THE REQUEST
+
+   Everything you will ever need to edit is in this first block.
+   ============================================================ */
+
+var CONFIG = {
+
+  // Days ahead before a date can be requested. 14 = two weeks.
+  // Counted from the visitor's today, so it rolls forward daily.
+  LEAD_DAYS: 14,
+
+  // Furthest ahead someone may ask. null = no limit.
+  MAX_DAYS: null,
+
+  // Dates you are away. Inclusive, YYYY-MM-DD. Add a line per trip,
+  // delete them as they pass. The native calendar can only grey out
+  // dates before the lead window — it cannot grey out a range in
+  // the middle — so a date in here can still be picked; the page
+  // then declines it and the button stays dark.
+  AWAY: [
+    // ["2027-08-01", "2027-10-31"],
+  ],
+
+  // ROT13 of the address, same as the Contact page. No @ in the file.
+  ADDR_USER: "yvtug",
+  ADDR_HOST: "nyrkvhf.fghqvb",
+
+  SUBJECT: "Request — The Coma"
+};
+
+
+(function () {
+  "use strict";
+
+  var input    = document.getElementById("req-date");
+  var note     = document.getElementById("req-note");
+  var send     = document.getElementById("req-send");
+  var fallback = document.getElementById("req-fallback");
+  var addrEl   = document.getElementById("req-addr");
+  var tmplEl   = document.getElementById("req-template");
+  if (!input || !send) return;
+
+  function rot13(s) {
+    return s.replace(/[a-z]/gi, function (c) {
+      var b = c <= "Z" ? 65 : 97;
+      return String.fromCharCode((c.charCodeAt(0) - b + 13) % 26 + b);
+    });
+  }
+  var ADDR = rot13(CONFIG.ADDR_USER) + String.fromCharCode(64) + rot13(CONFIG.ADDR_HOST);
+
+  // Local date, not toISOString(): that one is UTC, and in Houston
+  // after 7pm it would already be tomorrow, shifting the window by
+  // a day for anyone visiting in the evening.
+  function ymd(d) {
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
+  }
+  function daysFromToday(n) {
+    var d = new Date();
+    d.setHours(12, 0, 0, 0);          // noon: immune to DST edges
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+  function readable(s) {
+    var p = s.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return d.toLocaleDateString(undefined,
+      { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+
+  var earliest = ymd(daysFromToday(CONFIG.LEAD_DAYS));
+  var latest   = CONFIG.MAX_DAYS ? ymd(daysFromToday(CONFIG.MAX_DAYS)) : "";
+
+  input.min = earliest;
+  if (latest) input.max = latest;
+  note.textContent = "From " + readable(earliest) + ".";
+
+  function away(s) {
+    for (var i = 0; i < CONFIG.AWAY.length; i++) {
+      // YYYY-MM-DD strings compare correctly as plain text.
+      if (s >= CONFIG.AWAY[i][0] && s <= CONFIG.AWAY[i][1]) return true;
+    }
+    return false;
+  }
+
+  // Typed input can bypass the picker's min/max, so the check is
+  // made here too, not left to the browser.
+  function valid(s) {
+    if (!s) return "";
+    if (s < earliest) return "From " + readable(earliest) + ".";
+    if (latest && s > latest) return "Until " + readable(latest) + ".";
+    if (away(s)) return "Away on this date.";
+    return null;
+  }
+
+  function body(s) {
+    return [
+      "Requested date: " + readable(s),
+      "",
+      "Name: ",
+      "Email: ",
+      "Phone: ",
+      "General location: ",
+      "Desired duration: ",
+      "",
+      "Anything else: ",
+      ""
+    ].join("\r\n");
+  }
+
+  input.addEventListener("input", function () {
+    var s = input.value;
+    var problem = valid(s);
+    fallback.hidden = true;
+
+    if (problem === null) {
+      note.textContent = readable(s) + ".";
+      send.setAttribute("aria-disabled", "false");
+    } else {
+      note.textContent = problem || ("From " + readable(earliest) + ".");
+      send.setAttribute("aria-disabled", "true");
+    }
+  });
+
+  send.addEventListener("click", function (e) {
+    e.preventDefault();
+    var s = input.value;
+    if (valid(s) !== null) return;
+
+    var subject = CONFIG.SUBJECT + " — " + readable(s);
+    var text = body(s);
+
+    window.location.href = "mailto:" + ADDR +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(text);
+
+    // If the visitor has no mail app, nothing visible happens. After
+    // a moment, show the address and the lines to copy, quietly.
+    addrEl.href = "mailto:" + ADDR;
+    addrEl.textContent = ADDR;
+    tmplEl.textContent = "Subject: " + subject + "\n\n" + text.replace(/\r\n/g, "\n");
+    setTimeout(function () { fallback.hidden = false; }, 1500);
+  });
+})();
+</script>
+
+</body>
+</html>
