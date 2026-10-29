@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="Alexius Odom">
 
-  <!-- UNLISTED. Asks search engines not to index this page or follow
-       its links. Delete this line on the day it goes public, along
+  <!-- Delete this line on the day it goes public, along
        with adding it to the nav. Do NOT list this page in robots.txt:
        robots.txt is public, so naming the page there announces it. -->
   <meta name="robots" content="noindex, nofollow">
@@ -21,13 +20,10 @@
 
   <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
-  <!-- Match these ?v= numbers to whatever your other pages use. -->
-  <link rel="stylesheet" href="style.css?v=7">
-  <link rel="stylesheet" href="interference.css?v=7">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="interference.css">
 
   <style>
-    /* Page-specific. Kept here rather than in interference.css so
-       nothing shared gets regenerated or overwritten. */
 
     .req label {
       display: block;
@@ -58,8 +54,7 @@
       border-bottom-color: var(--ash);
     }
 
-    /* Sessions. Radios drawn dark for the same reason as the
-       date picker; accent-color tints the selected dot. */
+
     .req fieldset { border: none; }
     .req legend {
       font-family: var(--data);
@@ -87,7 +82,7 @@
     }
 
     #req-note {
-      min-height: 1.6em;           /* reserve the line so nothing jumps */
+      min-height: 1.6em;           
       margin-top: 0.8rem;
       font-family: var(--data);
       font-size: 0.75rem;
@@ -137,9 +132,6 @@
 
   <main class="prose req">
 
-    <!-- YOUR WORDS, if any. One or two lines, or nothing at all.
-         I have left this empty on purpose: the voice is yours. -->
-
     <p>
       <label for="req-date">Date</label>
       <input type="date" id="req-date">
@@ -147,7 +139,6 @@
 
     <fieldset style="margin-top:2rem;">
       <legend>Session</legend>
-      <!-- Filled from CONFIG.SESSIONS in the script below. -->
       <div id="req-sessions"></div>
     </fieldset>
 
@@ -182,7 +173,7 @@
 /* ============================================================
    THE REQUEST
 
-   Everything you will ever need to edit is in this first block.
+   Everything that will ever need to be edited is in this first block.
    ============================================================ */
 
 var CONFIG = {
@@ -192,7 +183,7 @@ var CONFIG = {
   LEAD_DAYS: 14,
 
   // Furthest ahead someone may ask. null = no limit.
-  MAX_DAYS: null,
+  MAX_DAYS: 60,
 
   // UNAVAILABLE DATES. Inclusive, YYYY-MM-DD, one line each,
   // comma at the end of every line. Delete lines as they pass.
@@ -204,16 +195,14 @@ var CONFIG = {
   // window, not a range in the middle — so a date in here can
   // still be picked; the page declines it and the button stays dark.
   AWAY: [
-    ["2026-11-06"],
-    ["2026-11-14"],
-    ["2026-11-25"], 
+    ["2026-11-06", "2026-11-06"],
+    ["2026-11-14", "2026-11-14"],
+    ["2026-11-25", "2026-11-25"], 
     ["2026-12-05", "2026-12-10"],
     ["2026-12-25", "2027-01-09"],
   ],
 
-  // Session start times, in order. These become the choices on
-  // the page. Add, remove, or change them here only.
-  SESSIONS: ["17:30", "19:00"],
+  SESSIONS: ["17:30 CST", "19:00 CST"],
 
   // ROT13 of the address, same as the Contact page. No @ in the file.
   ADDR_USER: "yvtug",
