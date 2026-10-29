@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="Alexius Odom">
 
-  <!-- Delete this line on the day it goes public, along
+  <!-- UNLISTED. Asks search engines not to index this page or follow
+       its links. Delete this line on the day it goes public, along
        with adding it to the nav. Do NOT list this page in robots.txt:
        robots.txt is public, so naming the page there announces it. -->
   <meta name="robots" content="noindex, nofollow">
+
   <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
   <meta name="rights" content="All content on this site is the intellectual property
                                of Alexius Odom. Unauthorized reproduction, distribution,
@@ -20,50 +22,107 @@
 
   <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="interference.css">
+  <!-- Match these ?v= numbers to whatever your other pages use. -->
+  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="interference.css?v=7">
 
   <style>
+    /* Page-specific. Kept here rather than in interference.css so
+       nothing shared gets regenerated or overwritten. */
 
-    .req label {
+    /* Breathing room beneath the fixed name and title. */
+    .req { padding-top: 3rem; }
+
+    .req .field-label,
+    .req legend {
       display: block;
       font-family: var(--data);
       font-size: 0.7rem;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--ash);
-      margin-bottom: 0.6rem;
-    }
-
-    /* color-scheme: dark asks the browser to draw its native date
-       picker dark. Without it, the calendar opens as a white panel
-       — the same hole in the field the audio player was. */
-    .req input[type="date"] {
-      color-scheme: dark;
-      font-family: var(--data);
-      font-size: 0.95rem;
-      color: var(--bone);
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid var(--veil);
-      padding: 0.35rem 0;
-      min-width: 12em;
-    }
-    .req input[type="date"]:focus-visible {
-      outline: none;
-      border-bottom-color: var(--ash);
+      margin-bottom: 0.9rem;
     }
 
 
-    .req fieldset { border: none; }
-    .req legend {
-      font-family: var(--data);
-      font-size: 0.7rem;
+    /* ---- CALENDAR ---------------------------------------------
+       Drawn by the page, not the browser, so every unavailable
+       date can be greyed — the native picker can only grey dates
+       before the window, never a range in the middle.
+
+       Hover follows rule 3 of style.css: in at 0.15s, out over 4s. */
+    .cal { width: min(100%, 22rem); font-family: var(--data); }
+
+    .cal-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .cal-month {
+      font-size: 0.78rem;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: var(--ash);
-      margin-bottom: 0.6rem;
+      color: var(--bone);
     }
+    .cal-nav {
+      background: none;
+      border: none;
+      font: inherit;
+      font-size: 1rem;
+      color: var(--ash);
+      padding: 0.2rem 0.6rem;
+      transition: color 4s ease-out;
+    }
+    .cal-nav:hover:not(:disabled) { color: var(--lit); transition: color 0.15s ease-in; }
+    .cal-nav:disabled { color: transparent; }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+    }
+    .cal-dow {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--ash);
+      text-align: center;
+      padding-bottom: 0.5rem;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      background: none;
+      border: 1px solid transparent;
+      font: inherit;
+      font-size: 0.85rem;
+      color: var(--bone);
+      transition: color 4s ease-out, border-color 4s ease-out;
+    }
+    .cal-day:hover:not(:disabled) {
+      color: var(--lit);
+      border-color: var(--veil);
+      transition: color 0.15s ease-in, border-color 0.15s ease-in;
+    }
+    .cal-day:focus-visible { outline: 1px solid var(--bone); outline-offset: 2px; }
+
+    /* Greyed: before the window, beyond the limit, or away. */
+    .cal-day:disabled { color: var(--veil); }
+
+    /* Away dates carry a faint strike as well, so they read as
+       withheld rather than simply past. */
+    .cal-day.is-away {
+      text-decoration: line-through;
+      text-decoration-color: var(--ash);
+    }
+
+    .cal-day[aria-pressed="true"] {
+      color: var(--lit);
+      border-color: var(--ash);
+    }
+
+
+    /* ---- SESSIONS --------------------------------------------- */
+    .req fieldset { border: none; }
     .req .session-opt {
       display: inline-flex;
       align-items: center;
@@ -72,7 +131,6 @@
       font-family: var(--data);
       font-size: 0.95rem;
       letter-spacing: 0.04em;
-      text-transform: none;
       color: var(--bone);
     }
     .req input[type="radio"] {
@@ -81,9 +139,11 @@
       margin: 0;
     }
 
+
+    /* ---- NOTE, BUTTON, FALLBACK ------------------------------- */
     #req-note {
-      min-height: 1.6em;           
-      margin-top: 0.8rem;
+      min-height: 1.6em;           /* reserve the line so nothing jumps */
+      margin-top: 1.4rem;
       font-family: var(--data);
       font-size: 0.75rem;
     }
@@ -132,13 +192,18 @@
 
   <main class="prose req">
 
-    <p>
-      <label for="req-date">Date</label>
-      <input type="date" id="req-date">
-    </p>
+    <!-- YOUR WORDS, if any. One or two lines, or nothing at all.
+         Left empty on purpose: the voice is yours. -->
 
-    <fieldset style="margin-top:2rem;">
+    <div>
+      <span class="field-label" id="req-cal-label">Date</span>
+      <!-- Drawn by the script below. -->
+      <div id="req-cal" class="cal" role="group" aria-labelledby="req-cal-label"></div>
+    </div>
+
+    <fieldset style="margin-top:2.4rem;">
       <legend>Session</legend>
+      <!-- Filled from CONFIG.SESSIONS in the script below. -->
       <div id="req-sessions"></div>
     </fieldset>
 
@@ -173,7 +238,7 @@
 /* ============================================================
    THE REQUEST
 
-   Everything that will ever need to be edited is in this first block.
+   Everything you will ever need to edit is in this first block.
    ============================================================ */
 
 var CONFIG = {
@@ -182,18 +247,15 @@ var CONFIG = {
   // Counted from the visitor's today, so it rolls forward daily.
   LEAD_DAYS: 14,
 
-  // Furthest ahead someone may ask. null = no limit.
+  // Furthest ahead someone may ask, in days. null = no limit.
   MAX_DAYS: 60,
 
   // UNAVAILABLE DATES. Inclusive, YYYY-MM-DD, one line each,
   // comma at the end of every line. Delete lines as they pass.
+  // These are greyed and struck through in the calendar.
   //
   //   a trip:        ["2027-08-01", "2027-10-31"],
   //   a single day:  ["2026-11-20", "2026-11-20"],
-  //
-  // The native calendar can only grey out dates before the lead
-  // window, not a range in the middle — so a date in here can
-  // still be picked; the page declines it and the button stays dark.
   AWAY: [
     ["2026-11-06", "2026-11-06"],
     ["2026-11-14", "2026-11-14"],
@@ -202,26 +264,32 @@ var CONFIG = {
     ["2026-12-25", "2027-01-09"],
   ],
 
-  SESSIONS: ["17:30 CST", "19:00 CST"],
+  // Session start times, in order. These become the choices on
+  // the page. Add, remove, or change them here only.
+  SESSIONS: ["17:30", "19:00"],
+
+  // First column of the calendar. 0 = Sunday, 1 = Monday.
+  WEEK_STARTS: 0,
 
   // ROT13 of the address, same as the Contact page. No @ in the file.
   ADDR_USER: "yvtug",
   ADDR_HOST: "nyrkvhf.fghqvb",
 
-  SUBJECT: "Request — Dialogue with Light & Shadow"
+  SUBJECT: "Request — The Coma"
 };
 
 
 (function () {
   "use strict";
 
-  var input    = document.getElementById("req-date");
+  var cal      = document.getElementById("req-cal");
+  var sessBox  = document.getElementById("req-sessions");
   var note     = document.getElementById("req-note");
   var send     = document.getElementById("req-send");
   var fallback = document.getElementById("req-fallback");
   var addrEl   = document.getElementById("req-addr");
   var tmplEl   = document.getElementById("req-template");
-  if (!input || !send) return;
+  if (!cal || !send) return;
 
   function rot13(s) {
     return s.replace(/[a-z]/gi, function (c) {
@@ -231,9 +299,10 @@ var CONFIG = {
   }
   var ADDR = rot13(CONFIG.ADDR_USER) + String.fromCharCode(64) + rot13(CONFIG.ADDR_HOST);
 
-  // Local date, not toISOString(): that one is UTC, and in Houston
-  // after 7pm it would already be tomorrow, shifting the window by
-  // a day for anyone visiting in the evening.
+
+  /* ---- dates --------------------------------------------------
+     Local dates throughout, never toISOString(): that one is UTC,
+     and in Houston after 7pm it is already tomorrow. */
   function ymd(d) {
     var m = d.getMonth() + 1, day = d.getDate();
     return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
@@ -244,19 +313,17 @@ var CONFIG = {
     d.setDate(d.getDate() + n);
     return d;
   }
-  function readable(s) {
+  function parse(s) {
     var p = s.split("-");
-    var d = new Date(+p[0], +p[1] - 1, +p[2]);
-    return d.toLocaleDateString(undefined,
+    return new Date(+p[0], +p[1] - 1, +p[2], 12);
+  }
+  function readable(s) {
+    return parse(s).toLocaleDateString(undefined,
       { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   }
 
   var earliest = ymd(daysFromToday(CONFIG.LEAD_DAYS));
   var latest   = CONFIG.MAX_DAYS ? ymd(daysFromToday(CONFIG.MAX_DAYS)) : "";
-
-  input.min = earliest;
-  if (latest) input.max = latest;
-  note.textContent = "From " + readable(earliest) + ".";
 
   function away(s) {
     for (var i = 0; i < CONFIG.AWAY.length; i++) {
@@ -266,18 +333,114 @@ var CONFIG = {
     return false;
   }
 
-  // Typed input can bypass the picker's min/max, so the check is
-  // made here too, not left to the browser.
-  function valid(s) {
-    if (!s) return "";
-    if (s < earliest) return "From " + readable(earliest) + ".";
-    if (latest && s > latest) return "Until " + readable(latest) + ".";
-    if (away(s)) return "Away on this date.";
-    return null;
+  function open(s) {
+    if (s < earliest) return false;
+    if (latest && s > latest) return false;
+    if (away(s)) return false;
+    return true;
   }
 
-  // Build the session choices from CONFIG.
-  var sessBox = document.getElementById("req-sessions");
+
+  /* ---- calendar ----------------------------------------------- */
+  var selected = "";
+  var e0 = parse(earliest);
+  var view = { y: e0.getFullYear(), m: e0.getMonth() };
+  var minView = { y: view.y, m: view.m };
+  var maxView = null;
+  if (latest) {
+    var l0 = parse(latest);
+    maxView = { y: l0.getFullYear(), m: l0.getMonth() };
+  }
+
+  function cmp(a, b) { return (a.y - b.y) * 12 + (a.m - b.m); }
+
+  function button(cls, text, label) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = cls;
+    b.textContent = text;
+    if (label) b.setAttribute("aria-label", label);
+    return b;
+  }
+
+  function render(refocus) {
+    cal.innerHTML = "";
+
+    // Header: previous, month, next.
+    var head = document.createElement("div");
+    head.className = "cal-head";
+
+    var prev = button("cal-nav", "‹", "Previous month");
+    var next = button("cal-nav", "›", "Next month");
+    prev.disabled = cmp(view, minView) <= 0;
+    next.disabled = maxView ? cmp(view, maxView) >= 0 : false;
+
+    prev.addEventListener("click", function () {
+      view.m -= 1; if (view.m < 0) { view.m = 11; view.y -= 1; }
+      render();
+    });
+    next.addEventListener("click", function () {
+      view.m += 1; if (view.m > 11) { view.m = 0; view.y += 1; }
+      render();
+    });
+
+    var month = document.createElement("span");
+    month.className = "cal-month";
+    month.textContent = new Date(view.y, view.m, 1, 12)
+      .toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+    head.appendChild(prev);
+    head.appendChild(month);
+    head.appendChild(next);
+    cal.appendChild(head);
+
+    // Grid: weekday initials, blanks, days.
+    var grid = document.createElement("div");
+    grid.className = "cal-grid";
+
+    // 1 January 2023 was a Sunday; offset from it for the initials.
+    for (var i = 0; i < 7; i++) {
+      var dow = document.createElement("span");
+      dow.className = "cal-dow";
+      dow.setAttribute("aria-hidden", "true");
+      dow.textContent = new Date(2023, 0, 1 + (CONFIG.WEEK_STARTS + i) % 7, 12)
+        .toLocaleDateString(undefined, { weekday: "narrow" });
+      grid.appendChild(dow);
+    }
+
+    var lead = (new Date(view.y, view.m, 1, 12).getDay() - CONFIG.WEEK_STARTS + 7) % 7;
+    for (var b = 0; b < lead; b++) grid.appendChild(document.createElement("span"));
+
+    var count = new Date(view.y, view.m + 1, 0, 12).getDate();
+    var focusMe = null;
+
+    for (var d = 1; d <= count; d++) {
+      var s = ymd(new Date(view.y, view.m, d, 12));
+      var isAway = away(s);
+      var label = readable(s) + (isAway ? ", unavailable" : "");
+      var day = button("cal-day" + (isAway ? " is-away" : ""), String(d), label);
+
+      day.disabled = !open(s);
+      day.setAttribute("aria-pressed", s === selected ? "true" : "false");
+
+      (function (s, day) {
+        day.addEventListener("click", function () {
+          selected = s;
+          render(true);
+          refresh();
+        });
+      })(s, day);
+
+      if (s === selected) focusMe = day;
+      grid.appendChild(day);
+    }
+
+    cal.appendChild(grid);
+    if (refocus && focusMe) focusMe.focus();
+  }
+
+
+  /* ---- sessions ----------------------------------------------- */
   CONFIG.SESSIONS.forEach(function (t) {
     var lab = document.createElement("label");
     lab.className = "session-opt";
@@ -296,6 +459,22 @@ var CONFIG = {
     return r ? r.value : "";
   }
 
+
+  /* ---- note and button ---------------------------------------
+     The button lights only when an open date and a session are
+     both chosen. */
+  function refresh() {
+    var t = session();
+    fallback.hidden = true;
+
+    if (selected) {
+      note.textContent = readable(selected) + (t ? ", " + t + "." : ". Choose a session.");
+    } else {
+      note.textContent = "From " + readable(earliest) + ".";
+    }
+    send.setAttribute("aria-disabled", (selected && t) ? "false" : "true");
+  }
+
   function body(s, t) {
     return [
       "Requested date: " + readable(s),
@@ -304,6 +483,7 @@ var CONFIG = {
       "Name: ",
       "Email: ",
       "Phone: ",
+      "General location: ",
       "Desired duration: ",
       "",
       "Anything else: ",
@@ -311,32 +491,13 @@ var CONFIG = {
     ].join("\r\n");
   }
 
-  // The button lights only when both a valid date and a session
-  // are chosen.
-  function refresh() {
-    var s = input.value;
-    var t = session();
-    var problem = valid(s);
-    fallback.hidden = true;
-
-    if (problem === null) {
-      note.textContent = readable(s) + (t ? ", " + t + "." : ". Choose a session.");
-    } else {
-      note.textContent = problem || ("From " + readable(earliest) + ".");
-    }
-    send.setAttribute("aria-disabled", (problem === null && t) ? "false" : "true");
-  }
-
-  input.addEventListener("input", refresh);
-
   send.addEventListener("click", function (e) {
     e.preventDefault();
-    var s = input.value;
     var t = session();
-    if (valid(s) !== null || !t) return;
+    if (!selected || !open(selected) || !t) return;
 
-    var subject = CONFIG.SUBJECT + " — " + readable(s) + ", " + t;
-    var text = body(s, t);
+    var subject = CONFIG.SUBJECT + " — " + readable(selected) + ", " + t;
+    var text = body(selected, t);
 
     window.location.href = "mailto:" + ADDR +
       "?subject=" + encodeURIComponent(subject) +
@@ -349,6 +510,9 @@ var CONFIG = {
     tmplEl.textContent = "Subject: " + subject + "\n\n" + text.replace(/\r\n/g, "\n");
     setTimeout(function () { fallback.hidden = false; }, 1500);
   });
+
+  render();
+  refresh();
 })();
 </script>
 
