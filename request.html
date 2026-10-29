@@ -4,23 +4,30 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="author" content="Alexius Odom">
-  <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
-  <meta name="rights" content="All content on this site is the intellectual property
-                               of Alexius Odom. Unauthorized reproduction, distribution,
-                               or use is prohibited.">
 
   <!-- UNLISTED. Asks search engines not to index this page or follow
        its links. Delete this line on the day it goes public, along
        with adding it to the nav. Do NOT list this page in robots.txt:
        robots.txt is public, so naming the page there announces it. -->
   <meta name="robots" content="noindex, nofollow">
+  <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
+  <meta name="rights" content="All content on this site is the intellectual property
+                               of Alexius Odom. Unauthorized reproduction, distribution,
+                               or use is prohibited.">
+
+<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected
+  under U.S. copyright law. Unauthorized use is prohibited.
+  -->
 
   <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="interference.css">
+  <!-- Match these ?v= numbers to whatever your other pages use. -->
+  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="interference.css?v=7">
 
   <style>
+    /* Page-specific. Kept here rather than in interference.css so
+       nothing shared gets regenerated or overwritten. */
 
     .req label {
       display: block;
@@ -49,6 +56,34 @@
     .req input[type="date"]:focus-visible {
       outline: none;
       border-bottom-color: var(--ash);
+    }
+
+    /* Sessions. Radios drawn dark for the same reason as the
+       date picker; accent-color tints the selected dot. */
+    .req fieldset { border: none; }
+    .req legend {
+      font-family: var(--data);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ash);
+      margin-bottom: 0.6rem;
+    }
+    .req .session-opt {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin: 0 2.2rem 0 0;
+      font-family: var(--data);
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: var(--bone);
+    }
+    .req input[type="radio"] {
+      color-scheme: dark;
+      accent-color: var(--bone);
+      margin: 0;
     }
 
     #req-note {
@@ -110,6 +145,12 @@
       <input type="date" id="req-date">
     </p>
 
+    <fieldset style="margin-top:2rem;">
+      <legend>Session</legend>
+      <!-- Filled from CONFIG.SESSIONS in the script below. -->
+      <div id="req-sessions"></div>
+    </fieldset>
+
     <p id="req-note" class="quiet" aria-live="polite"></p>
 
     <p style="margin-top:2.5rem;">
@@ -138,11 +179,10 @@
 <script src="interference.js?v=7"></script>
 
 <script>
-
-  /* ============================================================
+/* ============================================================
    THE REQUEST
 
-   Everything that needs editing is in this first block.
+   Everything you will ever need to edit is in this first block.
    ============================================================ */
 
 var CONFIG = {
@@ -154,11 +194,15 @@ var CONFIG = {
   // Furthest ahead someone may ask. null = no limit.
   MAX_DAYS: null,
 
-  // Dates you are away. Inclusive, YYYY-MM-DD. Add a line per trip,
-  // delete them as they pass. The native calendar can only grey out
-  // dates before the lead window — it cannot grey out a range in
-  // the middle — so a date in here can still be picked; the page
-  // then declines it and the button stays dark.
+  // UNAVAILABLE DATES. Inclusive, YYYY-MM-DD, one line each,
+  // comma at the end of every line. Delete lines as they pass.
+  //
+  //   a trip:        ["2027-08-01", "2027-10-31"],
+  //   a single day:  ["2026-11-20", "2026-11-20"],
+  //
+  // The native calendar can only grey out dates before the lead
+  // window, not a range in the middle — so a date in here can
+  // still be picked; the page declines it and the button stays dark.
   AWAY: [
     ["2026-11-06"],
     ["2026-11-14"],
@@ -169,7 +213,7 @@ var CONFIG = {
 
   // Session start times, in order. These become the choices on
   // the page. Add, remove, or change them here only.
-  SESSIONS: ["17:30 CST", "19:00 CST"],
+  SESSIONS: ["17:30", "19:00"],
 
   // ROT13 of the address, same as the Contact page. No @ in the file.
   ADDR_USER: "yvtug",
@@ -198,7 +242,9 @@ var CONFIG = {
   }
   var ADDR = rot13(CONFIG.ADDR_USER) + String.fromCharCode(64) + rot13(CONFIG.ADDR_HOST);
 
-
+  // Local date, not toISOString(): that one is UTC, and in Houston
+  // after 7pm it would already be tomorrow, shifting the window by
+  // a day for anyone visiting in the evening.
   function ymd(d) {
     var m = d.getMonth() + 1, day = d.getDate();
     return d.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (day < 10 ? "0" : "") + day;
@@ -241,41 +287,68 @@ var CONFIG = {
     return null;
   }
 
-  function body(s) {
+  // Build the session choices from CONFIG.
+  var sessBox = document.getElementById("req-sessions");
+  CONFIG.SESSIONS.forEach(function (t) {
+    var lab = document.createElement("label");
+    lab.className = "session-opt";
+    var r = document.createElement("input");
+    r.type = "radio";
+    r.name = "session";
+    r.value = t;
+    r.addEventListener("change", refresh);
+    lab.appendChild(r);
+    lab.appendChild(document.createTextNode(t));
+    sessBox.appendChild(lab);
+  });
+
+  function session() {
+    var r = sessBox.querySelector('input[name="session"]:checked');
+    return r ? r.value : "";
+  }
+
+  function body(s, t) {
     return [
       "Requested date: " + readable(s),
+      "Session: " + t,
       "",
       "Name: ",
       "Email: ",
       "Phone: ",
       "General location: ",
       "Desired duration: ",
+      "",
       "Anything else: ",
       ""
     ].join("\r\n");
   }
 
-  input.addEventListener("input", function () {
+  // The button lights only when both a valid date and a session
+  // are chosen.
+  function refresh() {
     var s = input.value;
+    var t = session();
     var problem = valid(s);
     fallback.hidden = true;
 
     if (problem === null) {
-      note.textContent = readable(s) + ".";
-      send.setAttribute("aria-disabled", "false");
+      note.textContent = readable(s) + (t ? ", " + t + "." : ". Choose a session.");
     } else {
       note.textContent = problem || ("From " + readable(earliest) + ".");
-      send.setAttribute("aria-disabled", "true");
     }
-  });
+    send.setAttribute("aria-disabled", (problem === null && t) ? "false" : "true");
+  }
+
+  input.addEventListener("input", refresh);
 
   send.addEventListener("click", function (e) {
     e.preventDefault();
     var s = input.value;
-    if (valid(s) !== null) return;
+    var t = session();
+    if (valid(s) !== null || !t) return;
 
-    var subject = CONFIG.SUBJECT + " — " + readable(s);
-    var text = body(s);
+    var subject = CONFIG.SUBJECT + " — " + readable(s) + ", " + t;
+    var text = body(s, t);
 
     window.location.href = "mailto:" + ADDR +
       "?subject=" + encodeURIComponent(subject) +
