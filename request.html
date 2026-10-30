@@ -27,10 +27,7 @@
   <link rel="stylesheet" href="interference.css?v=7">
 
   <style>
-    /* Page-specific. Kept here rather than in interference.css so
-       nothing shared gets regenerated or overwritten. */
 
-    /* Breathing room beneath the fixed name and title. */
     .req { padding-top: 3rem; }
 
     .req .field-label,
@@ -45,12 +42,6 @@
     }
 
 
-    /* ---- CALENDAR ---------------------------------------------
-       Drawn by the page, not the browser, so every unavailable
-       date can be greyed — the native picker can only grey dates
-       before the window, never a range in the middle.
-
-       Hover follows rule 3 of style.css: in at 0.15s, out over 4s. */
     .cal { width: min(100%, 22rem); font-family: var(--data); }
 
     .cal-head {
@@ -105,11 +96,9 @@
     }
     .cal-day:focus-visible { outline: 1px solid var(--bone); outline-offset: 2px; }
 
-    /* Greyed: before the window, beyond the limit, or away. */
     .cal-day:disabled { color: var(--veil); }
 
-    /* Away dates carry a faint strike as well, so they read as
-       withheld rather than simply past. */
+
     .cal-day.is-away {
       text-decoration: line-through;
       text-decoration-color: var(--ash);
@@ -238,8 +227,7 @@
 
 var CONFIG = {
 
-  // Days ahead before a date can be requested. 14 = two weeks.
-  // Counted from the visitor's today, so it rolls forward daily.
+
   LEAD_DAYS: 14,
 
   // Furthest ahead someone may ask, in days. null = no limit.
@@ -259,16 +247,13 @@ var CONFIG = {
     ["2026-12-25", "2027-01-09"],
   ],
 
-  // Session start times, in order. These become the choices on
-  // the page. Add, remove, or change them here only.
+ 
   SESSIONS: ["17:30 CT", "19:00 CT"],
 
-  // Weekdays never available. 0 = Sunday, 1 = Monday … 6 = Saturday.
   CLOSED_DAYS: [0],
   
   WEEK_STARTS: 0,
 
-  // ROT13 of the address, same as the Contact page. No @ in the file.
   ADDR_USER: "yvtug",
   ADDR_HOST: "nyrkvhf.fghqvb",
 
