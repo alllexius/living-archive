@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alexius Odom">
+  <meta name="copyright" content="© 2026 Alexius Odom. All rights reserved.">
+  <meta name="rights" content="All content on this site is the intellectual property
+                               of Alexius Odom. Unauthorized reproduction, distribution,
+                               or use is prohibited.">
+
+<!-- © 2026 Alexius Odom. All content, code, and visual material on this site is protected
+  under U.S. copyright law. Unauthorized use is prohibited.
+  -->
+
+  <title>Alexius</title>
+  <link rel="icon" href="assets/favicon.png" type="image/x-icon">
+  <!-- Match these ?v= numbers to whatever your other pages use. -->
+  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="interference.css?v=7">
+
+  <!-- Hides the plain list the moment the page starts, so it never
+       flashes. If the drift fails to build, the script removes this
+       class again and the list comes back. -->
+  <script>document.documentElement.classList.add("js-drift");</script>
+
+  <style>
+    /* ============================================================
+       THE DRIFT — page-specific. Kept here rather than in
+       interference.css so nothing shared gets regenerated.
+       ============================================================ */
+
+    /* ---- the plain list (no JavaScript) ----------------------- */
+    #drift-source {
+      padding: 8rem 5vw 7rem;
+      max-width: 40em;
+    }
+    #drift-source article {
+      padding: 2rem 0 3rem;
+      border-top: 1px solid var(--veil);
+    }
+    #drift-source img,
+    #drift-source video { display: block; max-width: 100%; height: auto; }
+    #drift-source audio { display: block; width: 100%; margin-top: 1rem; }
+    #drift-source p + * { margin-top: 1rem; }
+
+    .js-drift #drift-source { display: none; }
+
+
+    /* ---- the cloud ---------------------------------------------
+       Every entry is placed in space by the script below. The
+       perspective value is the eye's distance from the screen:
+       lower is a wider, more dramatic lens, higher is flatter. */
+    #drift {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      perspective: 900px;
+      perspective-origin: 50% 50%;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: opacity 1000ms ease, filter 1000ms ease;
+    }
+    html:not(.js-drift) #drift { display: none; }
+
+    .drift-item {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      opacity: 0;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+
+      /* rule 3 of style.css: brighten in 0.15s, decay over 4s */
+      filter: brightness(1);
+      transition: filter 4s ease-out;
+    }
+    .drift-item:hover,
+    .drift-item:focus-visible {
+      filter: brightness(1.4);
+      transition: filter 0.15s ease-in;
+    }
+    .drift-item:focus-visible { outline: 1px solid var(--ash); outline-offset: 6px; }
+
+    /* Blur for depth is set on the inner element, so the hover
+       brightness on the outer one never fights it. */
+    .drift-inner { display: block; }
+    .drift-inner img,
+    .drift-inner video {
+      display: block;
+      width: 100%;
+      height: auto;
+      pointer-events: none;
+    }
+
+    /* Writing floats as writing. */
+    .drift-text {
+      width: 17em;
+      font-family: var(--prose);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--bone);
+    }
+    .drift-text p + p { margin-top: 0.8em; }
+
+    /* A recording with no words and no image: a ring. */
+    .drift-ring {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--ash);
+    }
+
+    /* Withdraw while the menu or a selected entry is open. */
+    body.nav-open #drift,
+    body.focus-open #drift {
+      opacity: 0.06;
+      filter: blur(3px);
+      pointer-events: none;
+    }
+    body.focus-open .fn-foot { opacity: 0.06; }
+
+
+    /* ---- a selected entry --------------------------------------
+       Surfaces over three seconds, and recedes over three. Sits
+       below the veil, so it inverts with everything else. */
+    #drift-focus {
+      position: fixed;
+      inset: 0;
+      z-index: 8600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 3000ms ease;
+    }
+    #drift-focus.on { opacity: 1; pointer-events: auto; }
+
+    .focus-inner {
+      width: min(88vw, 40em);
+      max-height: 84vh;
+      overflow-y: auto;
+      transform: scale(0.94);
+      transition: transform 3000ms cubic-bezier(.22, .61, .36, 1);
+    }
+    #drift-focus.on .focus-inner { transform: scale(1); }
+
+    .focus-inner img,
+    .focus-inner video {
+      display: block;
+      max-width: 100%;
+      max-height: 64vh;
+      width: auto;
+      height: auto;
+      margin: 0 auto;
+    }
+    .focus-inner p {
+      margin-top: 1.4rem;
+      color: var(--bone);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .focus-inner p:first-child { margin-top: 0; }
+    .focus-inner audio {
+      display: block;
+      width: 100%;
+      margin-top: 1.4rem;
+      color-scheme: dark;
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+      #drift, #drift-focus, .focus-inner, .drift-item { transition-duration: 1ms; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="field-canvas" aria-hidden="true"></canvas>
+
+<a href="index.html" id="site-title">Alexius</a>
+
+<h1 id="page-title">Field Notes</h1>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html" aria-current="page">Field Notes</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
+
+
+<!-- The cloud is built here by the script. -->
+<div id="drift" aria-label="Field notes"></div>
+
+<!-- A selected entry surfaces here. -->
+<div id="drift-focus" aria-hidden="true">
+  <div class="focus-inner"></div>
+</div>
+
+
+<!-- ============================================================
+     THE ENTRIES
+
+     Written exactly as before: one <article> per entry, in any
+     order. The script reads them and places them in the cloud.
+     Without JavaScript they simply show as a list.
+
+     In the cloud, each entry appears as its first image; if it
+     has none, its video; if none, its words; if none, a ring for
+     a recording. EVERYTHING in the article appears when it is
+     selected — so any words you add to an image entry stay hidden
+     in the cloud and surface only on selection. That is where
+     "more information" lives.
+
+     Dates stay in data-date: yours in the source, never rendered.
+     Watch the closing quote; it is silent when it breaks.
+     ============================================================ -->
+
+<main id="drift-source">
+
+  <article data-date="2026-08-03">
+    <img src="assets/260803_terrain.jpg" alt="">
+  </article>
+
+  <article data-date="2026-08-02">
+    <img src="assets/260802_iridescence.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-29">
+    <img src="assets/20260729_this_window.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-28">
+    <p>
+      <i>This melody will stop sooner than I thought.</i>
+    </p>
+    <audio controls src="assets/260728_penny_heart_1.m4a"></audio>
+  </article>
+
+  <article data-date="2026-07-26">
+    <audio controls src="assets/260724_flight_htx_mpls_1.m4a"></audio>
+  </article>
+
+  <article data-date="2026-07-16">
+    <img src="assets/260716_lasers_sheets.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-16">
+    <video controls playsinline src="assets/260714_laser_field.mp4"></video>
+  </article>
+
+  <article data-date="2026-07-11">
+    <video controls playsinline src="assets/260711_light_scratch.mp4"></video>
+  </article>
+
+  <article data-date="2026-07-11">
+    <img src="assets/260711_light_break.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-11">
+    <img src="assets/260711_lights_more_1.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-10">
+    <img src="assets/260710_diffusion_1.jpg" alt="">
+  </article>
+
+  <article data-date="2026-07-09">
+    <img src="assets/260709_inverted_abstraction.gif" alt="">
+  </article>
+
+  <article data-date="2026-07-04">
+    <p>
+      <i>In the Ganzfeld goggles, where the space is undefined and depth cannot be determined, after about 5-10 minutes, color is
+        experienced as a sensation more than a distinguishable name. “Real” world references like “green like grass” fall away.
+        The individual colors, in the Ganzfeld, begin to turn from being “blue”, “orange”, “red” to distinct sensations on the
+        spectrum of illumination and darkness. When the colors quickly shift from one to another, the shift isn't visible. It
+        is felt with the eyes. I flex between startled and provoked in these moments, and I'm not sure what the difference is
+        between what elicits which response. The quick shift feels like an actual pulse of fervor, mimicking its transitions in my
+        own body, starting at the center of my core and spreading equally to the ends of every limb and follicle. The sensation is
+        strongest within my very eyes, though. The eyelids, whether or not they are open, are almost forgotten. Then I
+        instinctively blink, become aware of the action, and snap back to being a transcriber, filing away reality.</i>
+    </p>
+  </article>
+
+  <article data-date="2026-06-24">
+    <p>
+      <i>Force software to calculate the decay of light over time.</i>
+    </p>
+  </article>
+
+  <article data-date="2026-06-12">
+    <img src="assets/260612_bedroom.jpg" alt="">
+  </article>
+
+  <article data-date="2026-05-31">
+    <img src="assets/260531_holographic_webs.jpg" alt="">
+  </article>
+
+  <article data-date="2026-05-20">
+    <p>
+      <i>The irreducibility of perceptual experience – the sensation ≠ the act.</i>
+    </p>
+  </article>
+
+  <article data-date="2026-03-11">
+    <img src="assets/260322_sustenance_1.png" alt="">
+  </article>
+
+  <article data-date="2026-02-18">
+    <img src="assets/260218_new_plant_window_reflection.jpg" alt="">
+  </article>
+
+  <article data-date="2026-02-01">
+    <p>
+      <i>In closing my eyes, I used a clean finger to wiggle the edge, and sought out where the lichtchaos occurred and how.
+        I did not see honeycombs or latticework, but flickers of light and squiggles; phosphenes triggered by external
+        stimulation... It remains unknown... This intimate visual field of light.</i>
+    </p>
+  </article>
+
+  <article data-date="2026-01-16">
+    <video controls playsinline src="assets/260116_light_breaking.mp4"></video>
+  </article>
+
+  <article data-date="2025-12-28">
+    <p>
+      <i>Light apparently doesn't just illuminate matter, it also magnetically influences it. But how?
+      Is there a prioritization with what is influenced? How is matter influenced?</i>
+    </p>
+  </article>
+
+  <article data-date="2025-12-19">
+    <video controls playsinline src="assets/251219_drive_austin.mp4"></video>
+  </article>
+
+  <article data-date="2025-12-18">
+    <img src="assets/251218_whole_light_red.png" alt="">
+  </article>
+
+  <article data-date="2025-12-18">
+    <img src="assets/251218_broken_light.png" alt="">
+  </article>
+
+  <article data-date="2025-12-18">
+    <img src="assets/251218_saintly_light.png" alt="">
+  </article>
+
+  <article data-date="2025-12-09">
+    <p>Infused solutions.</p>
+    <audio controls src="assets/20251209_infusion_01_fn.mp3"></audio>
+  </article>
+
+  <article data-date="2025-12-05">
+    <p>Noises, metal, shadows.</p>
+    <audio controls src="assets/251205_noise_live.m4a"></audio>
+  </article>
+
+  <!-- ENTRY TEMPLATE — duplicate, fill, place anywhere above.
+
+  <article data-date="YYYY-MM-DD">
+    <img src="assets/YYMMDD_name.jpg" alt="">
+    <p>Words that surface only when this is selected.</p>
+  </article>
+
+  -->
+
+</main>
+
+<div class="fn-foot">20 MINUTES IN TRUE DARKNESS, DAILY</div>
+
+<div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
+<script src="cursor.js?v=7"></script>
+<script src="interference.js?v=7"></script>
+
+<script>
+/* ============================================================
+   THE DRIFT
+
+   Everything worth tuning is in this first block.
+   ============================================================ */
+
+var CLOUD = {
+  WIDTH:  3000,   // how wide the cloud is
+  HEIGHT: 1300,   // how tall
+  DEPTH:  4400,   // how deep — how far one can drift
+
+  FAR:    3600,   // beyond this an entry has dissolved into the field
+  SIZE_MIN: 190,  // narrowest entry, px
+  SIZE_MAX: 360,  // widest entry, px
+
+  DRIFT:  9,      // speed of the idle drift. 0 = perfectly still
+  IDLE:   7000,   // ms without input before the drift resumes
+
+  SEED:   7       // change to rearrange the whole cloud
+};
+
+
+(function () {
+  "use strict";
+
+  var root   = document.documentElement;
+  var stage  = document.getElementById("drift");
+  var source = document.getElementById("drift-source");
+  var focus  = document.getElementById("drift-focus");
+  var inner  = focus && focus.querySelector(".focus-inner");
+
+  function giveUp() { root.classList.remove("js-drift"); }
+  if (!stage || !source || !inner) { giveUp(); return; }
+
+  var articles = Array.prototype.slice.call(source.querySelectorAll("article"));
+  if (!articles.length) { giveUp(); return; }
+
+  var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var COARSE  = window.matchMedia("(pointer: coarse)").matches;
+  var EYE     = 900;   // must match perspective in the CSS
+
+
+  /* ---- placement ----------------------------------------------
+     Seeded, so the cloud holds the same shape every visit. Each
+     entry takes the best of twelve candidate positions — the one
+     farthest from those already placed — so nothing clumps and
+     nothing lines up. */
+  var seed = CLOUD.SEED >>> 0;
+  function rand() {                      // mulberry32
+    seed = (seed + 0x6D2B79F5) | 0;
+    var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function span(a, b) { return a + (b - a) * rand(); }
+
+  var placed = [];
+  function place() {
+    var best = null, bestD = -1;
+    for (var k = 0; k < 12; k++) {
+      var c = {
+        x: span(-CLOUD.WIDTH / 2, CLOUD.WIDTH / 2),
+        y: span(-CLOUD.HEIGHT / 2, CLOUD.HEIGHT / 2),
+        z: span(-CLOUD.DEPTH, -300)
+      };
+      // keep a clearing directly ahead of the first view
+      if (Math.abs(c.x) < 260 && Math.abs(c.y) < 180 && c.z > -900) continue;
+      var d = Infinity;
+      for (var i = 0; i < placed.length; i++) {
+        var p = placed[i];
+        var dd = (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y) * 2 + (p.z - c.z) * (p.z - c.z) * 0.5;
+        if (dd < d) d = dd;
+      }
+      if (d > bestD) { bestD = d; best = c; }
+    }
+    if (!best) best = { x: span(-CLOUD.WIDTH/2, CLOUD.WIDTH/2), y: span(-CLOUD.HEIGHT/2, CLOUD.HEIGHT/2), z: span(-CLOUD.DEPTH, -900) };
+    placed.push(best);
+    return best;
+  }
+
+
+  /* ---- building the cloud ------------------------------------- */
+  var items = [];
+
+  articles.forEach(function (art) {
+    var img   = art.querySelector("img");
+    var video = art.querySelector("video");
+    var audio = art.querySelector("audio");
+    var paras = art.querySelectorAll("p");
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "drift-item";
+
+    var inside = document.createElement("span");
+    inside.className = "drift-inner";
+    var label = "";
+
+    if (img) {
+      var i2 = document.createElement("img");
+      i2.src = img.getAttribute("src");
+      i2.alt = "";
+      i2.decoding = "async";
+      inside.appendChild(i2);
+      inside.style.width = Math.round(span(CLOUD.SIZE_MIN, CLOUD.SIZE_MAX)) + "px";
+      label = img.getAttribute("alt") || "Image";
+
+    } else if (video) {
+      var v2 = document.createElement("video");
+      // #t=0.1 asks for a frame to show without playing
+      v2.src = video.getAttribute("src") + "#t=0.1";
+      v2.muted = true;
+      v2.playsInline = true;
+      v2.preload = "metadata";
+      inside.appendChild(v2);
+      inside.style.width = Math.round(span(CLOUD.SIZE_MIN, CLOUD.SIZE_MAX)) + "px";
+      label = "Video";
+
+    } else if (paras.length && paras[0].textContent.trim()) {
+      inside.classList.add("drift-text");
+      Array.prototype.forEach.call(paras, function (p) {
+        inside.appendChild(p.cloneNode(true));
+      });
+      label = paras[0].textContent.trim().slice(0, 80);
+
+    } else if (audio) {
+      inside.classList.add("drift-ring");
+      label = "Recording";
+
+    } else {
+      return;                           // nothing to show
+    }
+
+    btn.setAttribute("aria-label", label);
+    btn.appendChild(inside);
+    stage.appendChild(btn);
+
+    var pos = place();
+    items.push({
+      el: btn,
+      inner: inside,
+      art: art,
+      x: pos.x, y: pos.y, z: pos.z,
+      tilt: span(-6, 6),                // a small, fixed lean
+      blur: -1
+    });
+  });
+
+  if (!items.length) { giveUp(); return; }
+
+
+  /* ---- the camera ---------------------------------------------
+     A position on the floor of the cloud and a heading. Forward
+     is wherever you are facing. */
+  var cam = { x: 0, z: 700, yaw: 0 };
+  var vel = { move: 0, turn: 0 };
+  var look = { now: 0, target: 0 };     // the cursor's gentle lean
+  var glide = null;                     // keyboard focus approach
+  var lastInput = -Infinity;
+  var driftDir = 1;
+
+  function touch() { lastInput = performance.now(); glide = null; }
+
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function smooth(a, b, v) {
+    var t = clamp((v - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  // On a tall narrow screen the cloud draws in at the sides and
+  // stretches upward, so a phone is not looking at empty dark.
+  var xs = 1, ys = 1;
+  function fit() {
+    var a = window.innerWidth / window.innerHeight;
+    xs = clamp(a / 1.6, 0.38, 1);
+    ys = clamp(1 / (a * 1.15), 1, 1.7);
+  }
+  fit();
+  window.addEventListener("resize", fit);
+
+  function moveForward(d) {
+    cam.x = clamp(cam.x + Math.sin(cam.yaw) * d, -CLOUD.WIDTH * xs / 2, CLOUD.WIDTH * xs / 2);
+    cam.z = clamp(cam.z - Math.cos(cam.yaw) * d, -CLOUD.DEPTH, 900);
+  }
+
+
+  /* ---- drawing ------------------------------------------------ */
+  function draw() {
+    var yaw = cam.yaw + look.now;
+    var c = Math.cos(yaw), s = Math.sin(yaw);
+
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var dx = it.x * xs - cam.x, dz = it.z - cam.z;
+      var vx  = dx * c + dz * s;          // right of the eye
+      var fwd = dx * s - dz * c;          // ahead of the screen
+
+      // Fade in from the far dark; swell as it approaches; dissolve
+      // just before it would pass through the eye.
+      var o = smooth(CLOUD.FAR, CLOUD.FAR * 0.55, fwd) * smooth(-EYE * 0.72, -EYE * 0.3, fwd);
+
+      if (o <= 0.002) {
+        if (it.el.style.opacity !== "0") {
+          it.el.style.opacity = "0";
+          it.el.style.pointerEvents = "none";
+          it.el.style.transform = "translate3d(0,0,-99999px)";
+        }
+        continue;
+      }
+
+      // Turn partly toward the eye, so entries at the edges lean in.
+      var face = -Math.atan2(vx, fwd + EYE) * 57.2958 * 0.55 + it.tilt;
+
+      it.el.style.opacity = o.toFixed(3);
+      it.el.style.pointerEvents = o > 0.25 ? "auto" : "none";
+      it.el.style.transform =
+        "translate(-50%,-50%) translate3d(" + vx.toFixed(1) + "px," + (it.y * ys).toFixed(1) +
+        "px," + (-fwd).toFixed(1) + "px) rotateY(" + face.toFixed(2) + "deg)";
+
+      // Depth blur, in whole pixels only, so it repaints rarely.
+      var b = Math.round(clamp((fwd - 1500) / 600, 0, 3));
+      if (b !== it.blur) {
+        it.blur = b;
+        it.inner.style.filter = b ? "blur(" + b + "px)" : "";
+      }
+    }
+  }
+
+
+  /* ---- the loop ----------------------------------------------- */
+  var last = 0;
+  function frame(ms) {
+    var dt = last ? Math.min((ms - last) / 1000, 0.05) : 0.016;
+    last = ms;
+
+    if (glide) {
+      cam.x += (glide.x - cam.x) * Math.min(1, dt * 1.6);
+      cam.z += (glide.z - cam.z) * Math.min(1, dt * 1.6);
+      var dy = Math.atan2(Math.sin(glide.yaw - cam.yaw), Math.cos(glide.yaw - cam.yaw));
+      cam.yaw += dy * Math.min(1, dt * 1.6);
+    }
+
+    // Momentum: what you push keeps going, then settles.
+    moveForward(vel.move * dt);
+    cam.yaw += vel.turn * dt;
+    var damp = Math.exp(-dt * (REDUCED ? 30 : 3.2));
+    vel.move *= damp;
+    vel.turn *= damp;
+
+    // Idle: the cloud moves on its own, very slowly, and turns back
+    // at the far edge. This is how a visitor learns it is a space.
+    if (!REDUCED && CLOUD.DRIFT && !glide && ms - lastInput > CLOUD.IDLE) {
+      moveForward(CLOUD.DRIFT * driftDir * dt);
+      if (cam.z < -CLOUD.DEPTH + 900) driftDir = -1;
+      if (cam.z > 700) driftDir = 1;
+      look.target = Math.sin(ms * 0.00005) * 0.18;
+    }
+
+    look.now += (look.target - look.now) * Math.min(1, dt * 1.2);
+
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+
+  /* ---- input --------------------------------------------------
+     Desktop: scroll to move through depth, drag to turn, and the
+     cursor's position leans the view a little.
+     Touch: drag sideways to turn, up and down to move. */
+  stage.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    var d = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? 600 : 1);
+    vel.move += clamp(d * 3.2, -900, 900);   // scroll down = forward
+    touch();
+  }, { passive: false });
+
+  if (!COARSE) {
+    document.addEventListener("mousemove", function (e) {
+      look.target = (e.clientX / window.innerWidth - 0.5) * 0.14;
+    }, { passive: true });
+  }
+
+  var down = null;
+  stage.addEventListener("pointerdown", function (e) {
+    down = {
+      x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY,
+      id: e.pointerId, moved: false,
+      item: e.target.closest(".drift-item")
+    };
+    stage.setPointerCapture(e.pointerId);
+    touch();
+  });
+
+  stage.addEventListener("pointermove", function (e) {
+    if (!down || e.pointerId !== down.id) return;
+    var dx = e.clientX - down.lx, dy = e.clientY - down.ly;
+    down.lx = e.clientX; down.ly = e.clientY;
+    if (Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 6) down.moved = true;
+    if (!down.moved) return;
+
+    cam.yaw -= dx * 0.0032;
+    vel.turn = -dx * 0.12;
+    if (e.pointerType === "touch") {
+      moveForward(dy * 3.4);
+      vel.move = dy * 90;
+    }
+    touch();
+  });
+
+  function release(e) {
+    if (!down || e.pointerId !== down.id) return;
+    var d = down;
+    down = null;
+    if (!d.moved && d.item) open(d.item);
+  }
+  stage.addEventListener("pointerup", release);
+  stage.addEventListener("pointercancel", function () { down = null; });
+
+  document.addEventListener("keydown", function (e) {
+    if (focus.classList.contains("on") || document.body.classList.contains("nav-open")) return;
+    var k = e.key;
+    if (k === "ArrowUp")    { vel.move += 700;  touch(); e.preventDefault(); }
+    if (k === "ArrowDown")  { vel.move -= 700;  touch(); e.preventDefault(); }
+    if (k === "ArrowLeft")  { vel.turn -= 0.9;  touch(); e.preventDefault(); }
+    if (k === "ArrowRight") { vel.turn += 0.9;  touch(); e.preventDefault(); }
+  });
+
+  // Tabbing to an entry carries the eye to stand before it.
+  items.forEach(function (it) {
+    it.el.addEventListener("focus", function () {
+      if (down) return;
+      var dx = it.x * xs - cam.x, dz = it.z - cam.z;
+      var yaw = Math.atan2(dx, -dz);
+      glide = {
+        yaw: yaw,
+        x: clamp(it.x * xs - Math.sin(yaw) * 700, -CLOUD.WIDTH * xs / 2, CLOUD.WIDTH * xs / 2),
+        z: clamp(it.z + Math.cos(yaw) * 700, -CLOUD.DEPTH, 900)
+      };
+      lastInput = performance.now();
+    });
+    it.el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(it.el); }
+    });
+  });
+
+
+  /* ---- selecting an entry --------------------------------------
+     The whole article surfaces: image, words, recording, video.
+     Nothing is emptied until the fade has finished, so it recedes
+     rather than vanishing. */
+  var clearTimer = null;
+
+  function open(btn) {
+    var it = null;
+    for (var i = 0; i < items.length; i++) if (items[i].el === btn) it = items[i];
+    if (!it) return;
+
+    clearTimeout(clearTimer);
+    inner.innerHTML = "";
+    Array.prototype.forEach.call(it.art.children, function (child) {
+      var c = child.cloneNode(true);
+      c.removeAttribute("style");
+      inner.appendChild(c);
+    });
+    Array.prototype.forEach.call(inner.querySelectorAll("video"), function (v) {
+      v.controls = true;
+      v.playsInline = true;
+    });
+
+    focus.removeAttribute("aria-hidden");
+    void focus.offsetWidth;             // start the fade from zero
+    focus.classList.add("on");
+    document.body.classList.add("focus-open");
+  }
+
+  function close() {
+    if (!focus.classList.contains("on")) return;
+    focus.classList.remove("on");
+    focus.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("focus-open");
+    Array.prototype.forEach.call(inner.querySelectorAll("video, audio"), function (m) {
+      if (!m.paused) m.pause();
+    });
+    clearTimer = setTimeout(function () { inner.innerHTML = ""; }, 3200);
+  }
+
+  focus.addEventListener("click", function (e) {
+    if (e.target.closest("audio, video, a")) return;
+    close();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") close();
+  });
+  var veilBtn = document.getElementById("veil-btn");
+  if (veilBtn) veilBtn.addEventListener("click", close);
+
+
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
