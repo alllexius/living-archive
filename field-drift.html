@@ -815,8 +815,8 @@ var SPHERE = {
 
       // Near entries are clearer; far ones are faint. Only what is
       // directly ahead comes fully into the light.
-      var depth = smooth(SPHERE.FAR, SPHERE.FAR * 0.32, dist);
-      var ahead = smooth(0.86, 0.985, fwd / dist);
+      var depth = smooth(SPHERE.FAR, SPHERE.FAR * 0.2, dist);
+      var ahead = smooth(0.6, 0.85, fwd / dist);
       var o = depth *
               (SPHERE.OFF_AXIS + (1 - SPHERE.OFF_AXIS) * ahead) *
               smooth(-EYE * 0.72, -EYE * 0.3, fwd) *
@@ -842,7 +842,7 @@ var SPHERE = {
         "translate(-50%,-50%) translate3d(" + vx.toFixed(1) + "px," + (-vy).toFixed(1) +
         "px," + (-fwd).toFixed(1) + "px) rotateY(" + ry.toFixed(2) + "deg) rotateX(" + rx.toFixed(2) + "deg)";
 
-      var b = Math.round(clamp((dist - 1400) / 500, 0, 3));
+      var b = Math.round(clamp((dist - - SPHERE.FAR * 0.55) / (SPHERE.FAR * 0.15), 0, 3));
       if (b !== it.blur) {
         it.blur = b;
         it.inner.style.filter = b ? "blur(" + b + "px)" : "";
@@ -896,7 +896,8 @@ var SPHERE = {
     if (focus.classList.contains("on") || document.body.classList.contains("nav-open")) return;
     e.preventDefault();
     var d = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? 600 : 1);
-    vel.t += clamp(d * 2.6, -900, 900);     // scroll down = inward
+    var pace = SPHERE.RADIUS / 1700;
+    vel.t += clamp(d * 2.6 * pace, -900 * pace , 900 * pace);     // scroll down = inward
     glide = null;
   }, { passive: false });
 
