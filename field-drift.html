@@ -120,6 +120,22 @@
       border: 1px solid var(--ash);
     }
 
+    /* The sphere, seen from outside at full zoom-out. Lit from the
+       upper left so it reads as round rather than as a flat disc.
+       For a perfectly plain sphere, replace the gradient with
+       background: var(--lit); */
+    #drift-sphere {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: none;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle at 38% 34%,
+                    #F4F2EC 0%, var(--lit) 38%, #CFCDC6 78%, #ADABA4 100%);
+    }
+
     /* Withdraw while the menu or a selected entry is open. */
     body.nav-open #drift,
     body.focus-open #drift {
@@ -207,7 +223,7 @@
 <div id="invert-veil" aria-hidden="true"></div>
 
 
-<!-- The cloud is built here by the script. -->
+<!-- The sphere is built here by the script. -->
 <div id="drift" aria-label="Field notes"></div>
 
 <!-- A selected entry surfaces here. -->
@@ -223,7 +239,11 @@
      order. The script reads them and places them in the cloud.
      Without JavaScript they simply show as a list.
 
-     In the cloud, each entry appears as its first image; if it
+     data-date decides where an entry sits: the newest nearest the
+     centre, the oldest at the edge of the sphere. An entry without
+     a date is placed at the edge.
+
+     In the sphere, each entry appears as its first image; if it
      has none, its video; if none, its words; if none, a ring for
      a recording. EVERYTHING in the article appears when it is
      selected — so any words you add to an image entry stay hidden
@@ -562,24 +582,6 @@
   <article class="fn-entry" data-date="2025-02-09" data-setting="field">
     <img src="assets/260209_heavens_line.png" alt="" style="margin-top:1rem;">
   </article>
-  
-
-  <!-- ==========================================================
-       ENTRY TEMPLATE — duplicate, fill, place in order.
-       Voice recordings: .m4a or .mp3 only.
-
-  <article class="fn-entry" data-date="YYYY-MM-DD" data-setting="darkness practice">
-    <div class="study-date">setting: darkness practice</div>
-    <p style="margin-top:1rem;">The entry.</p>
-    <audio controls src="assets/note-YYYY-MM-DD.m4a" style="margin-top:1rem;"></audio>
-  </article>
-
-  <!-- ENTRY TEMPLATE — duplicate, fill, place anywhere above.
-
-  <article data-date="YYYY-MM-DD">
-    <img src="assets/YYMMDD_name.jpg" alt="">
-    <p>Words that surface only when this is selected.</p>
-  </article>
 
   -->
 
@@ -593,24 +595,27 @@
 
 <script>
 /* ============================================================
-   THE DRIFT
+   THE SPHERE
 
    Everything worth tuning is in this first block.
    ============================================================ */
 
-var CLOUD = {
-  WIDTH:  3000,   // how wide the cloud is
-  HEIGHT: 1300,   // how tall
-  DEPTH:  4400,   // how deep — how far one can drift
+var SPHERE = {
+  NEAR:   420,     // distance of the newest entries from the centre
+  RADIUS: 1700,    // distance of the oldest — the edge of the sphere
 
-  FAR:    3600,   // beyond this an entry has dissolved into the field
-  SIZE_MIN: 190,  // narrowest entry, px
-  SIZE_MAX: 360,  // widest entry, px
+  FAR:    2700,    // beyond this, an entry has dissolved into the field
+  OFF_AXIS: 0.38,  // how visible an entry is when not directly ahead (0–1)
 
-  DRIFT:  9,      // speed of the idle drift. 0 = perfectly still
-  IDLE:   7000,   // ms without input before the drift resumes
+  SIZE_MIN: 180,   // narrowest entry, px
+  SIZE_MAX: 330,   // widest entry, px
 
-  SEED:   7       // change to rearrange the whole cloud
+  OUT_FILL: 0.62,  // at full zoom-out, the sphere fills this share of the screen
+
+  SPIN:  0.0035,   // the whole sphere's slow turn, radians per second. 0 = still
+  SWAY:  14,       // how far each entry wanders, px. 0 = still
+
+  SEED:  7         // change to rearrange the sphere
 };
 
 
@@ -630,16 +635,12 @@ var CLOUD = {
   if (!articles.length) { giveUp(); return; }
 
   var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var COARSE  = window.matchMedia("(pointer: coarse)").matches;
   var EYE     = 900;   // must match perspective in the CSS
 
 
-  /* ---- placement ----------------------------------------------
-     Seeded, so the cloud holds the same shape every visit. Each
-     entry takes the best of twelve candidate positions — the one
-     farthest from those already placed — so nothing clumps and
-     nothing lines up. */
-  var seed = CLOUD.SEED >>> 0;
+  /* ---- seeded chance ------------------------------------------
+     The sphere holds the same shape on every visit. */
+  var seed = SPHERE.SEED >>> 0;
   function rand() {                      // mulberry32
     seed = (seed + 0x6D2B79F5) | 0;
     var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -647,36 +648,45 @@ var CLOUD = {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
   function span(a, b) { return a + (b - a) * rand(); }
-
-  var placed = [];
-  function place() {
-    var best = null, bestD = -1;
-    for (var k = 0; k < 12; k++) {
-      var c = {
-        x: span(-CLOUD.WIDTH / 2, CLOUD.WIDTH / 2),
-        y: span(-CLOUD.HEIGHT / 2, CLOUD.HEIGHT / 2),
-        z: span(-CLOUD.DEPTH, -300)
-      };
-      // keep a clearing directly ahead of the first view
-      if (Math.abs(c.x) < 260 && Math.abs(c.y) < 180 && c.z > -900) continue;
-      var d = Infinity;
-      for (var i = 0; i < placed.length; i++) {
-        var p = placed[i];
-        var dd = (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y) * 2 + (p.z - c.z) * (p.z - c.z) * 0.5;
-        if (dd < d) d = dd;
-      }
-      if (d > bestD) { bestD = d; best = c; }
-    }
-    if (!best) best = { x: span(-CLOUD.WIDTH/2, CLOUD.WIDTH/2), y: span(-CLOUD.HEIGHT/2, CLOUD.HEIGHT/2), z: span(-CLOUD.DEPTH, -900) };
-    placed.push(best);
-    return best;
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function smooth(a, b, v) {
+    var t = clamp((v - a) / (b - a), 0, 1);
+    return t * t * (3 - 2 * t);
   }
 
 
-  /* ---- building the cloud ------------------------------------- */
+  /* ---- order: newest at the centre, oldest at the edge ----------
+     Read from data-date. An entry without one is treated as the
+     oldest. */
+  articles.sort(function (a, b) {
+    var da = a.getAttribute("data-date") || "0000";
+    var db = b.getAttribute("data-date") || "0000";
+    return da < db ? 1 : da > db ? -1 : 0;
+  });
+
+
+  /* ---- directions -----------------------------------------------
+     Spread evenly over the whole sphere — above, below, behind —
+     then shuffled, so entries close in time are not close in space. */
+  var n = articles.length;
+  var dirs = [];
+  var golden = Math.PI * (3 - Math.sqrt(5));
+  for (var k = 0; k < n; k++) {
+    var y = 1 - (k + 0.5) / n * 2;
+    var rr = Math.sqrt(1 - y * y);
+    var th = golden * k + span(-0.25, 0.25);
+    dirs.push([Math.cos(th) * rr, y * 0.86, Math.sin(th) * rr]);
+  }
+  for (var s = dirs.length - 1; s > 0; s--) {
+    var j = Math.floor(rand() * (s + 1));
+    var tmp = dirs[s]; dirs[s] = dirs[j]; dirs[j] = tmp;
+  }
+
+
+  /* ---- building -------------------------------------------------- */
   var items = [];
 
-  articles.forEach(function (art) {
+  articles.forEach(function (art, rank) {
     var img   = art.querySelector("img");
     var video = art.querySelector("video");
     var audio = art.querySelector("audio");
@@ -696,102 +706,121 @@ var CLOUD = {
       i2.alt = "";
       i2.decoding = "async";
       inside.appendChild(i2);
-      inside.style.width = Math.round(span(CLOUD.SIZE_MIN, CLOUD.SIZE_MAX)) + "px";
+      inside.style.width = Math.round(span(SPHERE.SIZE_MIN, SPHERE.SIZE_MAX)) + "px";
       label = img.getAttribute("alt") || "Image";
-
     } else if (video) {
       var v2 = document.createElement("video");
-      // #t=0.1 asks for a frame to show without playing
-      v2.src = video.getAttribute("src") + "#t=0.1";
+      v2.src = video.getAttribute("src") + "#t=0.1";   // a still frame
       v2.muted = true;
       v2.playsInline = true;
       v2.preload = "metadata";
       inside.appendChild(v2);
-      inside.style.width = Math.round(span(CLOUD.SIZE_MIN, CLOUD.SIZE_MAX)) + "px";
+      inside.style.width = Math.round(span(SPHERE.SIZE_MIN, SPHERE.SIZE_MAX)) + "px";
       label = "Video";
-
     } else if (paras.length && paras[0].textContent.trim()) {
       inside.classList.add("drift-text");
-      Array.prototype.forEach.call(paras, function (p) {
-        inside.appendChild(p.cloneNode(true));
-      });
+      Array.prototype.forEach.call(paras, function (p) { inside.appendChild(p.cloneNode(true)); });
       label = paras[0].textContent.trim().slice(0, 80);
-
     } else if (audio) {
       inside.classList.add("drift-ring");
       label = "Recording";
-
     } else {
-      return;                           // nothing to show
+      return;
     }
 
     btn.setAttribute("aria-label", label);
     btn.appendChild(inside);
     stage.appendChild(btn);
 
-    var pos = place();
+    var frac = n > 1 ? rank / (n - 1) : 0;
+    var rad  = (SPHERE.NEAR + (SPHERE.RADIUS - SPHERE.NEAR) * frac) * span(0.96, 1.04);
+    var d    = dirs[rank];
+
     items.push({
-      el: btn,
-      inner: inside,
-      art: art,
-      x: pos.x, y: pos.y, z: pos.z,
-      tilt: span(-6, 6),                // a small, fixed lean
+      el: btn, inner: inside, art: art,
+      x: d[0] * rad, y: d[1] * rad, z: d[2] * rad,
+      // each entry wanders on its own slow, unrelated rhythm
+      w: [span(0.09, 0.25), span(0.09, 0.25), span(0.09, 0.25)],
+      p: [span(0, 6.28), span(0, 6.28), span(0, 6.28)],
       blur: -1
     });
   });
 
   if (!items.length) { giveUp(); return; }
 
+  // The sphere seen from outside.
+  var orb = document.createElement("div");
+  orb.id = "drift-sphere";
+  orb.setAttribute("aria-hidden", "true");
+  orb.style.width = orb.style.height = (SPHERE.RADIUS * 2) + "px";
+  stage.insertBefore(orb, stage.firstChild);
 
-  /* ---- the camera ---------------------------------------------
-     A position on the floor of the cloud and a heading. Forward
-     is wherever you are facing. */
-  var cam = { x: 0, z: 700, yaw: 0 };
-  var vel = { move: 0, turn: 0 };
-  var look = { now: 0, target: 0 };     // the cursor's gentle lean
-  var glide = null;                     // keyboard focus approach
-  var lastInput = -Infinity;
-  var driftDir = 1;
 
-  function touch() { lastInput = performance.now(); glide = null; }
+  /* ---- the eye --------------------------------------------------
+     A heading (yaw, pitch) and one distance, t, along it, measured
+     from the centre. t = 0 is the centre, where every visit begins.
+     Positive t walks toward what is ahead; negative t backs out of
+     the sphere while still facing it, so the eye can never turn its
+     back on the work and lose it. */
+  var eye  = { yaw: 0, pitch: 0, t: 0 };
+  var vel  = { yaw: 0, pitch: 0, t: 0 };
+  var glide = null;
+  var spin = 0;
+  var tMax = SPHERE.RADIUS * 0.5;   // how far inward; stops short of the far wall
+  var tMin = -SPHERE.RADIUS * 1.5;
 
-  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function smooth(a, b, v) {
-    var t = clamp((v - a) / (b - a), 0, 1);
-    return t * t * (3 - 2 * t);
-  }
-
-  // On a tall narrow screen the cloud draws in at the sides and
-  // stretches upward, so a phone is not looking at empty dark.
-  var xs = 1, ys = 1;
   function fit() {
-    var a = window.innerWidth / window.innerHeight;
-    xs = clamp(a / 1.6, 0.38, 1);
-    ys = clamp(1 / (a * 1.15), 1, 1.7);
+    var m = Math.min(window.innerWidth, window.innerHeight);
+    var reach = 2 * SPHERE.RADIUS * EYE / (SPHERE.OUT_FILL * m) - EYE;
+    tMin = -Math.max(reach, SPHERE.RADIUS * 1.4);
   }
   fit();
   window.addEventListener("resize", fit);
 
-  function moveForward(d) {
-    cam.x = clamp(cam.x + Math.sin(cam.yaw) * d, -CLOUD.WIDTH * xs / 2, CLOUD.WIDTH * xs / 2);
-    cam.z = clamp(cam.z - Math.cos(cam.yaw) * d, -CLOUD.DEPTH, 900);
+  function settle() {
+    eye.pitch = clamp(eye.pitch, -1.35, 1.35);
+    eye.t = clamp(eye.t, tMin, tMax);
   }
 
 
-  /* ---- drawing ------------------------------------------------ */
-  function draw() {
-    var yaw = cam.yaw + look.now;
-    var c = Math.cos(yaw), s = Math.sin(yaw);
+  /* ---- drawing ---------------------------------------------------- */
+  function draw(sec) {
+    var cy = Math.cos(eye.yaw),   sy = Math.sin(eye.yaw);
+    var cp = Math.cos(eye.pitch), sp = Math.sin(eye.pitch);
+
+    var f = [sy * cp, sp, -cy * cp];     // ahead
+    var r = [cy, 0, sy];                 // right
+    var u = [-sy * sp, cp, cy * sp];     // up
+
+    var cam = [f[0] * eye.t, f[1] * eye.t, f[2] * eye.t];
+    var cs = Math.cos(spin), ss = Math.sin(spin);
+
+    // 0 inside the sphere; 1 once fully outside it.
+    var outside = smooth(SPHERE.RADIUS * 1.02, SPHERE.RADIUS * 1.55, -eye.t);
+    var sway = REDUCED ? 0 : SPHERE.SWAY;
 
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
-      var dx = it.x * xs - cam.x, dz = it.z - cam.z;
-      var vx  = dx * c + dz * s;          // right of the eye
-      var fwd = dx * s - dz * c;          // ahead of the screen
 
-      // Fade in from the far dark; swell as it approaches; dissolve
-      // just before it would pass through the eye.
-      var o = smooth(CLOUD.FAR, CLOUD.FAR * 0.55, fwd) * smooth(-EYE * 0.72, -EYE * 0.3, fwd);
+      var wx = it.x + sway * Math.sin(sec * it.w[0] + it.p[0]);
+      var wy = it.y + sway * Math.sin(sec * it.w[1] + it.p[1]);
+      var wz = it.z + sway * Math.sin(sec * it.w[2] + it.p[2]);
+      var px = wx * cs - wz * ss, pz = wx * ss + wz * cs;
+
+      var dx = px - cam[0], dy = wy - cam[1], dz = pz - cam[2];
+      var vx  = dx * r[0] + dz * r[2];
+      var vy  = dx * u[0] + dy * u[1] + dz * u[2];
+      var fwd = dx * f[0] + dy * f[1] + dz * f[2];
+      var dist = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+
+      // Near entries are clearer; far ones are faint. Only what is
+      // directly ahead comes fully into the light.
+      var depth = smooth(SPHERE.FAR, SPHERE.FAR * 0.32, dist);
+      var ahead = smooth(0.86, 0.985, fwd / dist);
+      var o = depth *
+              (SPHERE.OFF_AXIS + (1 - SPHERE.OFF_AXIS) * ahead) *
+              smooth(-EYE * 0.72, -EYE * 0.3, fwd) *
+              (1 - outside);
 
       if (o <= 0.002) {
         if (it.el.style.opacity !== "0") {
@@ -802,135 +831,166 @@ var CLOUD = {
         continue;
       }
 
-      // Turn partly toward the eye, so entries at the edges lean in.
-      var face = -Math.atan2(vx, fwd + EYE) * 57.2958 * 0.55 + it.tilt;
+      var lean = EYE + Math.max(fwd, 0);
+      var ry = -Math.atan2(vx, lean) * 57.2958 * 0.4;
+      var rx = -Math.atan2(vy, lean) * 57.2958 * 0.4;
 
       it.el.style.opacity = o.toFixed(3);
-      it.el.style.pointerEvents = o > 0.25 ? "auto" : "none";
+      it.el.style.pointerEvents = o > 0.12 ? "auto" : "none";
+      it.el.style.zIndex = String(Math.max(1, Math.round(20000 - fwd)));
       it.el.style.transform =
-        "translate(-50%,-50%) translate3d(" + vx.toFixed(1) + "px," + (it.y * ys).toFixed(1) +
-        "px," + (-fwd).toFixed(1) + "px) rotateY(" + face.toFixed(2) + "deg)";
+        "translate(-50%,-50%) translate3d(" + vx.toFixed(1) + "px," + (-vy).toFixed(1) +
+        "px," + (-fwd).toFixed(1) + "px) rotateY(" + ry.toFixed(2) + "deg) rotateX(" + rx.toFixed(2) + "deg)";
 
-      // Depth blur, in whole pixels only, so it repaints rarely.
-      var b = Math.round(clamp((fwd - 1500) / 600, 0, 3));
+      var b = Math.round(clamp((dist - 1400) / 500, 0, 3));
       if (b !== it.blur) {
         it.blur = b;
         it.inner.style.filter = b ? "blur(" + b + "px)" : "";
       }
     }
+
+    // The orb sits at the centre. Seen only from outside.
+    if (outside > 0.002) {
+      orb.style.display = "block";
+      orb.style.opacity = outside.toFixed(3);
+      orb.style.transform = "translate(-50%,-50%) translate3d(0,0," + eye.t.toFixed(1) + "px)";
+    } else if (orb.style.display !== "none") {
+      orb.style.display = "none";
+    }
   }
 
 
-  /* ---- the loop ----------------------------------------------- */
+  /* ---- the loop --------------------------------------------------- */
   var last = 0;
   function frame(ms) {
     var dt = last ? Math.min((ms - last) / 1000, 0.05) : 0.016;
     last = ms;
 
     if (glide) {
-      cam.x += (glide.x - cam.x) * Math.min(1, dt * 1.6);
-      cam.z += (glide.z - cam.z) * Math.min(1, dt * 1.6);
-      var dy = Math.atan2(Math.sin(glide.yaw - cam.yaw), Math.cos(glide.yaw - cam.yaw));
-      cam.yaw += dy * Math.min(1, dt * 1.6);
+      var g = Math.min(1, dt * 1.6);
+      eye.yaw   += Math.atan2(Math.sin(glide.yaw - eye.yaw), Math.cos(glide.yaw - eye.yaw)) * g;
+      eye.pitch += (glide.pitch - eye.pitch) * g;
+      eye.t     += (glide.t - eye.t) * g;
     }
 
-    // Momentum: what you push keeps going, then settles.
-    moveForward(vel.move * dt);
-    cam.yaw += vel.turn * dt;
+    eye.yaw   += vel.yaw * dt;
+    eye.pitch += vel.pitch * dt;
+    eye.t     += vel.t * dt;
     var damp = Math.exp(-dt * (REDUCED ? 30 : 3.2));
-    vel.move *= damp;
-    vel.turn *= damp;
+    vel.yaw *= damp; vel.pitch *= damp; vel.t *= damp;
+    settle();
 
-    // Idle: the cloud moves on its own, very slowly, and turns back
-    // at the far edge. This is how a visitor learns it is a space.
-    if (!REDUCED && CLOUD.DRIFT && !glide && ms - lastInput > CLOUD.IDLE) {
-      moveForward(CLOUD.DRIFT * driftDir * dt);
-      if (cam.z < -CLOUD.DEPTH + 900) driftDir = -1;
-      if (cam.z > 700) driftDir = 1;
-      look.target = Math.sin(ms * 0.00005) * 0.18;
-    }
+    if (!REDUCED) spin += SPHERE.SPIN * dt;
 
-    look.now += (look.target - look.now) * Math.min(1, dt * 1.2);
-
-    draw();
+    draw(ms / 1000);
     requestAnimationFrame(frame);
   }
 
 
-  /* ---- input --------------------------------------------------
-     Desktop: scroll to move through depth, drag to turn, and the
-     cursor's position leans the view a little.
-     Touch: drag sideways to turn, up and down to move. */
-  stage.addEventListener("wheel", function (e) {
+  /* ---- input -------------------------------------------------------
+     Drag to look: left, right, up, down. Scroll, or pinch on a
+     phone, to move in and out. */
+  // On the whole window, so scrolling works even with the cursor
+  // resting over the name, the title or the button.
+  window.addEventListener("wheel", function (e) {
+    if (focus.classList.contains("on") || document.body.classList.contains("nav-open")) return;
     e.preventDefault();
     var d = e.deltaY * (e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? 600 : 1);
-    vel.move += clamp(d * 3.2, -900, 900);   // scroll down = forward
-    touch();
+    vel.t += clamp(d * 2.6, -900, 900);     // scroll down = inward
+    glide = null;
   }, { passive: false });
 
-  if (!COARSE) {
-    document.addEventListener("mousemove", function (e) {
-      look.target = (e.clientX / window.innerWidth - 0.5) * 0.14;
-    }, { passive: true });
+  var pointers = {};
+  var down = null;
+  var pinch = null;
+
+  function count() { return Object.keys(pointers).length; }
+  function spread() {
+    var p = Object.keys(pointers).map(function (k) { return pointers[k]; });
+    return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
   }
 
-  var down = null;
   stage.addEventListener("pointerdown", function (e) {
-    down = {
-      x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY,
-      id: e.pointerId, moved: false,
-      item: e.target.closest(".drift-item")
-    };
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
     stage.setPointerCapture(e.pointerId);
-    touch();
+    glide = null;
+
+    if (count() === 2) {
+      pinch = { d: spread() };
+      down = null;                         // a pinch is never a selection
+    } else if (count() === 1) {
+      down = {
+        x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY,
+        moved: false, item: e.target.closest(".drift-item")
+      };
+    }
   });
 
   stage.addEventListener("pointermove", function (e) {
-    if (!down || e.pointerId !== down.id) return;
+    if (!pointers[e.pointerId]) return;
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+
+    if (pinch && count() === 2) {
+      var d = spread();
+      eye.t += (d - pinch.d) * 4;          // fingers apart = inward
+      pinch.d = d;
+      settle();
+      return;
+    }
+    if (!down) return;
+
     var dx = e.clientX - down.lx, dy = e.clientY - down.ly;
     down.lx = e.clientX; down.ly = e.clientY;
     if (Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 6) down.moved = true;
     if (!down.moved) return;
 
-    cam.yaw -= dx * 0.0032;
-    vel.turn = -dx * 0.12;
-    if (e.pointerType === "touch") {
-      moveForward(dy * 3.4);
-      vel.move = dy * 90;
-    }
-    touch();
+    eye.yaw   -= dx * 0.0032;
+    eye.pitch += dy * 0.0032;
+    vel.yaw   = -dx * 0.12;
+    vel.pitch =  dy * 0.12;
+    settle();
   });
 
-  function release(e) {
-    if (!down || e.pointerId !== down.id) return;
+  function lift(e) {
+    delete pointers[e.pointerId];
+    if (count() < 2) pinch = null;
+    if (!down) return;
     var d = down;
     down = null;
     if (!d.moved && d.item) open(d.item);
   }
-  stage.addEventListener("pointerup", release);
-  stage.addEventListener("pointercancel", function () { down = null; });
+  stage.addEventListener("pointerup", lift);
+  stage.addEventListener("pointercancel", function (e) {
+    delete pointers[e.pointerId];
+    pinch = null;
+    down = null;
+  });
 
   document.addEventListener("keydown", function (e) {
     if (focus.classList.contains("on") || document.body.classList.contains("nav-open")) return;
-    var k = e.key;
-    if (k === "ArrowUp")    { vel.move += 700;  touch(); e.preventDefault(); }
-    if (k === "ArrowDown")  { vel.move -= 700;  touch(); e.preventDefault(); }
-    if (k === "ArrowLeft")  { vel.turn -= 0.9;  touch(); e.preventDefault(); }
-    if (k === "ArrowRight") { vel.turn += 0.9;  touch(); e.preventDefault(); }
+    var k = e.key, hit = true;
+    if      (k === "ArrowLeft")  vel.yaw   -= 0.9;
+    else if (k === "ArrowRight") vel.yaw   += 0.9;
+    else if (k === "ArrowUp")    vel.pitch += 0.7;
+    else if (k === "ArrowDown")  vel.pitch -= 0.7;
+    else if (k === "+" || k === "=") vel.t += 700;
+    else if (k === "-" || k === "_") vel.t -= 700;
+    else hit = false;
+    if (hit) { glide = null; e.preventDefault(); }
   });
 
-  // Tabbing to an entry carries the eye to stand before it.
+  // Tabbing to an entry turns the eye toward it and carries it close.
   items.forEach(function (it) {
     it.el.addEventListener("focus", function () {
       if (down) return;
-      var dx = it.x * xs - cam.x, dz = it.z - cam.z;
-      var yaw = Math.atan2(dx, -dz);
+      var cs = Math.cos(spin), ss = Math.sin(spin);
+      var px = it.x * cs - it.z * ss, pz = it.x * ss + it.z * cs, py = it.y;
+      var len = Math.sqrt(px * px + py * py + pz * pz) || 1;
       glide = {
-        yaw: yaw,
-        x: clamp(it.x * xs - Math.sin(yaw) * 700, -CLOUD.WIDTH * xs / 2, CLOUD.WIDTH * xs / 2),
-        z: clamp(it.z + Math.cos(yaw) * 700, -CLOUD.DEPTH, 900)
+        yaw: Math.atan2(px / len, -pz / len),
+        pitch: Math.asin(clamp(py / len, -1, 1)),
+        t: clamp(len - 650, 0, tMax)
       };
-      lastInput = performance.now();
     });
     it.el.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(it.el); }
@@ -938,10 +998,9 @@ var CLOUD = {
   });
 
 
-  /* ---- selecting an entry --------------------------------------
+  /* ---- selecting an entry ------------------------------------------
      The whole article surfaces: image, words, recording, video.
-     Nothing is emptied until the fade has finished, so it recedes
-     rather than vanishing. */
+     Nothing is emptied until the fade has finished. */
   var clearTimer = null;
 
   function open(btn) {
@@ -962,7 +1021,7 @@ var CLOUD = {
     });
 
     focus.removeAttribute("aria-hidden");
-    void focus.offsetWidth;             // start the fade from zero
+    void focus.offsetWidth;
     focus.classList.add("on");
     document.body.classList.add("focus-open");
   }
@@ -982,9 +1041,7 @@ var CLOUD = {
     if (e.target.closest("audio, video, a")) return;
     close();
   });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") close();
-  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   var veilBtn = document.getElementById("veil-btn");
   if (veilBtn) veilBtn.addEventListener("click", close);
 
