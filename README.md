@@ -6,7 +6,8 @@ downloads, no dependencies of any kind.
 ## The files
 - `index.html` — the frame
 - `archive.html` — studies
-- `field-notes.html` — journal entries + recordings
+- `field-notes.html` — journal entries + recordings - one at a time
+- `field-drift.html` - journal entries + recordings - as a sphere
 - `contact.html` — email and Are.na
 - `style.css` — visual decisions
 - `cursor.js` — the cursor
