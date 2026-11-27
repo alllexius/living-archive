@@ -20,7 +20,6 @@ body.rc {
 /* During the brightness check the field must change at once. */
 #rc-field.rc-instant { transition: none; }
 
-.rc-chrome,
 .rc-panel {
   position: fixed;
   z-index: 2;
@@ -122,3 +121,20 @@ li.rc-met { color: var(--bone); }
 
 /* The pointer is a light source too. Hidden when still. */
 body.rc-still, body.rc-still * { cursor: none; }
+
+/* While the room is lit by the page, the site's chrome leaves:
+   in fullscreen, title, nav, veil button, and drawn cursor go.
+   The veil goes whenever a session is live, fullscreen or not:
+   its invert() would flip the light itself. */
+html:fullscreen #site-title,
+html:fullscreen #page-title,
+html:fullscreen #page-note,
+html:fullscreen #veil-btn,
+html:fullscreen #centre-nav,
+html:fullscreen #cursor,
+body.rc-live #invert-veil { display: none; }
+
+/* With the drawn cursor gone, give the real one back,
+   until stillness hides it. */
+html.has-cursor:fullscreen body:not(.rc-still),
+html.has-cursor:fullscreen body:not(.rc-still) * { cursor: auto; }

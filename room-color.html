@@ -15,14 +15,14 @@
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css?v=3">
   <link rel="stylesheet" href="interference.css">
-  <link rel="stylesheet" href="room-color.css?v=1">
+  <link rel="stylesheet" href="room-color.css?v=2">
 </head>
 <body class="rc">
 
 <!-- The field: the whole screen, used as the room's light source. -->
 <div id="rc-field" aria-hidden="true"></div>
 
-<a href="index.html" id="site-title" class="rc-chrome">Alexius</a>
+<a href="index.html" id="site-title">Alexius</a>
 
   <h1 id="page-title">The Room</h1>
 
@@ -36,7 +36,7 @@
 <nav id="centre-nav" aria-label="Site">
   <a href="index.html">Condition</a>
   <a href="archive.html">Archive</a>
-  <a href="field-notes.html"page>Field Notes</a>
+  <a href="field-notes.html">Field Notes</a>
   <a href="field-drift.html">Field Drift</a>
   <a href="contact.html">Contact</a>
 </nav>
@@ -59,6 +59,7 @@
     <li data-cond="dark"><span class="rc-mark"></span> <span class="rc-label">Room light</span>
       <span class="rc-meter"><span id="rc-meter-fill"></span><span id="rc-meter-mark"></span></span>
     </li>
+    <li data-cond="mute"><span class="rc-mark"></span> <span class="rc-label">Room color</span></li>
     <li data-cond="screen"><span class="rc-mark">·</span> Screen brightness at full. Night Shift, True Tone, and night light off.</li>
   </ul>
   <p id="rc-instruction" role="status"></p>
@@ -71,7 +72,7 @@
     <span id="rc-hex-room">—</span> room, as the camera reads it
   </p>
   <p>
-    <button id="rc-mail" type="button">Email these colours to yourself</button>
+    <button id="rc-mail" type="button">Email these colors to yourself</button>
     <button id="rc-end" type="button">End</button>
   </p>
 </section>
@@ -82,6 +83,6 @@
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
 <script src="interference.js?v=3"></script>
-<script src="room-color.js?v=1"></script>
+<script src="room-color.js?v=2"></script>
 </body>
 </html>
