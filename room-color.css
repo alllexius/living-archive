@@ -1,0 +1,124 @@
+/* ============================================================
+   ROOM. The one page that uses hue. The hue lives only in the
+   field (the screen as light source). Text, buttons, and
+   marks stay hueless, as on every other page.
+   ============================================================ */
+
+body.rc {
+  background: #000;
+  overflow: hidden;
+}
+
+/* The field covers everything. Its colour is set by
+   room-color.js. Slow transition so steps read as drift. */
+#rc-field {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  transition: background-color 0.6s linear;
+}
+/* During the brightness check the field must change at once. */
+#rc-field.rc-instant { transition: none; }
+
+.rc-chrome,
+.rc-panel {
+  position: fixed;
+  z-index: 2;
+  /* Afterimage: quick in, slow out. */
+  transition: opacity 0.15s ease-in;
+}
+.rc-faded {
+  opacity: 0;
+  transition: opacity 4s ease-out;
+  pointer-events: none;
+}
+
+.rc-panel {
+  left: 2.5rem;
+  bottom: 2.5rem;
+  max-width: 34rem;
+  padding: 1.2rem 1.4rem;
+  background: rgba(14, 14, 19, 0.82);   /* --recess */
+  color: var(--bone);
+}
+.rc-panel[hidden] { display: none; }
+.rc-panel p + p { margin-top: 0.8rem; }
+
+.rc-data {
+  font-family: var(--data);
+  font-size: 0.78rem;
+  color: var(--ash);
+  line-height: 1.8;
+}
+
+.rc-panel ul { list-style: none; }
+.rc-mark {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--ash);
+}
+li.rc-met    .rc-mark::before { content: "●"; color: var(--lit); }
+li.rc-unmet  .rc-mark::before { content: "○"; }
+li.rc-weak   .rc-mark::before { content: "◐"; }
+li.rc-met { color: var(--bone); }
+
+/* Room-light meter: fill = share of the light on you that
+   comes from the screen. The mark = the threshold. */
+.rc-meter {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  width: 8rem;
+  height: 2px;
+  margin-left: 0.6rem;
+  background: var(--veil);
+}
+#rc-meter-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--bone);
+  transition: width 0.6s linear;
+}
+#rc-meter-mark {
+  position: absolute;
+  top: -4px; bottom: -4px;
+  width: 1px;
+  background: var(--lit);
+}
+
+#rc-instruction {
+  margin-top: 0.9rem;
+  color: var(--bone);
+}
+
+.rc-panel button {
+  font-family: var(--data);
+  font-size: 0.78rem;
+  color: var(--bone);
+  background: none;
+  border: 1px solid var(--veil);
+  padding: 0.35rem 0.8rem;
+  margin-top: 0.6rem;
+  margin-right: 0.6rem;
+  cursor: pointer;
+  transition: color 4s ease-out, border-color 4s ease-out;
+}
+.rc-panel button:hover,
+.rc-panel button:focus-visible {
+  color: var(--lit);
+  border-color: var(--ash);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+/* Some browsers stop decoding a video set to display:none,
+   so it stays rendered, 1px and invisible. */
+#rc-video {
+  position: fixed;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The pointer is a light source too. Hidden when still. */
+body.rc-still, body.rc-still * { cursor: none; }
