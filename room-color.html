@@ -11,9 +11,10 @@
      Unauthorized use is prohibited. The site's code was written with a
      large language model, under Alexius Odom's direction, and tuned by hand. -->
 
-  <title>Alexius — Room</title>
+  <title>Alexius</title>
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="interference.css">
   <link rel="stylesheet" href="room-color.css?v=1">
 </head>
 <body class="rc">
@@ -22,6 +23,25 @@
 <div id="rc-field" aria-hidden="true"></div>
 
 <a href="index.html" id="site-title" class="rc-chrome">Alexius</a>
+
+  <h1 id="page-title">The Room</h1>
+
+<p id="page-note">‎ </p>
+
+<button id="veil-btn" type="button"
+        aria-label="Shift the field"
+        aria-expanded="false"
+        aria-controls="centre-nav"></button>
+
+<nav id="centre-nav" aria-label="Site">
+  <a href="index.html">Condition</a>
+  <a href="archive.html">Archive</a>
+  <a href="field-notes.html"page>Field Notes</a>
+  <a href="field-drift.html">Field Drift</a>
+  <a href="contact.html">Contact</a>
+</nav>
+
+<div id="invert-veil" aria-hidden="true"></div>
 
 <!-- 1. THRESHOLD. Shown before the camera starts. -->
 <section id="rc-gate" class="rc-panel">
@@ -35,7 +55,7 @@
 <section id="rc-conditions" class="rc-panel" hidden>
   <ul class="rc-data" aria-live="polite">
     <li data-cond="camera"><span class="rc-mark"></span> Camera</li>
-    <li data-cond="balance"><span class="rc-mark"></span> <span class="rc-label">Camera colour</span></li>
+    <li data-cond="balance"><span class="rc-mark"></span> <span class="rc-label">Camera color</span></li>
     <li data-cond="dark"><span class="rc-mark"></span> <span class="rc-label">Room light</span>
       <span class="rc-meter"><span id="rc-meter-fill"></span><span id="rc-meter-mark"></span></span>
     </li>
@@ -59,7 +79,9 @@
 <!-- Off-screen: the camera's frames are drawn here, small, and read. -->
 <video id="rc-video" playsinline muted></video>
 <canvas id="rc-canvas" width="64" height="48" hidden></canvas>
-
+<div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
+<script src="cursor.js"></script>
+<script src="interference.js?v=3"></script>
 <script src="room-color.js?v=1"></script>
 </body>
 </html>
