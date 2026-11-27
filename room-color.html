@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Alexius Odom">
+  <meta name="copyright" content="© 2026 Alexius Odom. Images, recordings, writing, and studies: all rights reserved.">
+
+  <!-- © 2026 Alexius Odom. The images, recordings, writing, and studies on this
+     site are Alexius Odom's and are protected under U.S. copyright law.
+     Unauthorized use is prohibited. The site's code was written with a
+     large language model, under Alexius Odom's direction, and tuned by hand. -->
+
+  <title>Alexius — Room</title>
+  <link rel="icon" href="assets/favicon.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="room-color.css?v=1">
+</head>
+<body class="rc">
+
+<!-- The field: the whole screen, used as the room's light source. -->
+<div id="rc-field" aria-hidden="true"></div>
+
+<a href="index.html" id="site-title" class="rc-chrome">Alexius</a>
+
+<!-- 1. THRESHOLD. Shown before the camera starts. -->
+<section id="rc-gate" class="rc-panel">
+  <p>This page uses the screen as the light in your room.</p>
+  <p class="rc-data">The camera image stays on this device. Nothing is recorded or sent.</p>
+  <button id="rc-begin" type="button">Begin</button>
+  <p id="rc-gate-msg" class="rc-data" role="status"></p>
+</section>
+
+<!-- 2. CONDITIONS. Each line reports whether it is met. -->
+<section id="rc-conditions" class="rc-panel" hidden>
+  <ul class="rc-data" aria-live="polite">
+    <li data-cond="camera"><span class="rc-mark"></span> Camera</li>
+    <li data-cond="balance"><span class="rc-mark"></span> <span class="rc-label">Camera colour</span></li>
+    <li data-cond="dark"><span class="rc-mark"></span> <span class="rc-label">Room light</span>
+      <span class="rc-meter"><span id="rc-meter-fill"></span><span id="rc-meter-mark"></span></span>
+    </li>
+    <li data-cond="screen"><span class="rc-mark">·</span> Screen brightness at full. Night Shift, True Tone, and night light off.</li>
+  </ul>
+  <p id="rc-instruction" role="status"></p>
+</section>
+
+<!-- 3. DURING. Appears on pointer movement, then decays. -->
+<section id="rc-during" class="rc-panel" hidden>
+  <p class="rc-data">
+    <span id="rc-hex-screen">—</span> screen<br>
+    <span id="rc-hex-room">—</span> room, as the camera reads it
+  </p>
+  <p>
+    <button id="rc-mail" type="button">Email these colours to yourself</button>
+    <button id="rc-end" type="button">End</button>
+  </p>
+</section>
+
+<!-- Off-screen: the camera's frames are drawn here, small, and read. -->
+<video id="rc-video" playsinline muted></video>
+<canvas id="rc-canvas" width="64" height="48" hidden></canvas>
+
+<script src="room-color.js?v=1"></script>
+</body>
+</html>
