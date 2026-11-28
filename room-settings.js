@@ -85,16 +85,16 @@ window.ROOM_SETTINGS = {
   // Movement strength · 0 – 0.3 · original 0.1
   // How far movement can shift the color. 0 = movement changes
   // nothing. Always within the color limit.
-  movementStrength: 0.1,
+  movementStrength: 0.2,
 
   // Movement rate · 0 – 0.05 · original 0.012
   // How fast the color answers movement while it happens.
-  movementRate: 0.012,
+  movementRate: 0.03,
 
   // Movement fade (seconds) · 1 – 120 · original 17
   // How long the shift from a movement takes to fade once the
   // room is still again.
-  movementFadeSeconds: 17,
+  movementFadeSeconds: 12,
 
   /* ---- PAGE ---- */
 
