@@ -742,14 +742,16 @@ function buildTune() {
 async function copySettings() {
   const text = settingsFileText(S, WORDS);
   const out = $('rc-tune-out');
+  out.value = text; out.hidden = false;           // always visible, as a fallback
+  const note = $('rc-tune-diff');
+  note.textContent = 'Select all of the text below and copy it.';
   try {
-    await navigator.clipboard.writeText(text);
-    $('rc-tune-diff').textContent = 'Copied. On GitHub: open room-settings.js, edit, select all, paste, commit.';
-    out.hidden = true;
-  } catch (e) {
-    out.value = text; out.hidden = false; out.select();
-    $('rc-tune-diff').textContent = 'Select all of the text below and copy it.';
-  }
+    await Promise.race([
+      navigator.clipboard.writeText(text),
+      new Promise((_, no) => setTimeout(no, 1500)),
+    ]);
+    note.textContent = 'Copied. On GitHub: open room-settings.js, click the pencil, select all, paste, commit.';
+  } catch (e) { out.select(); }
 }
 
 function toggleTune() { if (tuneBox) tuneBox.hidden = !tuneBox.hidden; }
