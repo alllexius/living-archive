@@ -138,3 +138,65 @@ body.rc-live #invert-veil { display: none; }
    until stillness hides it. */
 html.has-cursor:fullscreen body:not(.rc-still),
 html.has-cursor:fullscreen body:not(.rc-still) * { cursor: auto; }
+
+/* ---- TUNING PANEL (room-color.html?tune only) -------------- */
+#rc-tune {
+  position: fixed;
+  z-index: 9500;
+  top: 1.2rem; right: 1.2rem; bottom: 1.2rem;
+  width: 24rem;
+  overflow-y: auto;
+  padding: 1rem 1.2rem;
+  background: rgba(14, 14, 19, 0.9);    /* --recess */
+  color: var(--bone);
+  font-family: var(--data);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+#rc-tune[hidden] { display: none; }
+.rc-tune-head { display: flex; justify-content: space-between; margin-bottom: 0.6rem; }
+#rc-tune h2 {
+  font: inherit;
+  color: var(--ash);
+  letter-spacing: 0.12em;
+  margin: 1.2rem 0 0.4rem;
+  border-top: 1px solid var(--veil);
+  padding-top: 0.6rem;
+}
+#rc-tune pre {
+  font: inherit;
+  color: var(--ash);
+  white-space: pre-wrap;
+  margin: 0.4rem 0;
+}
+.rc-tune-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.rc-tune-row label { flex: 1 1 9rem; }
+.rc-tune-row input[type="range"] { flex: 1 1 7rem; accent-color: var(--bone); }
+.rc-tune-row input[type="number"] {
+  width: 4.6rem;
+  font: inherit;
+  color: var(--lit);
+  background: transparent;
+  border: 1px solid var(--veil);
+  padding: 0.1rem 0.3rem;
+}
+.rc-tune-help { color: var(--ash); margin: 0.15rem 0 0; }
+.rc-tune-note { color: var(--bone); margin-top: 0.8rem; }
+#rc-tune button {
+  font: inherit;
+  color: var(--bone);
+  background: none;
+  border: 1px solid var(--veil);
+  padding: 0.3rem 0.7rem;
+  margin: 0.6rem 0.5rem 0 0;
+  cursor: pointer;
+}
+#rc-tune button:hover { color: var(--lit); border-color: var(--ash); }
+#rc-tune textarea {
+  width: 100%;
+  margin-top: 0.6rem;
+  font: inherit;
+  color: var(--bone);
+  background: var(--eigengrau);
+  border: 1px solid var(--veil);
+}
