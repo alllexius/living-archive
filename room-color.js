@@ -99,6 +99,18 @@ const SCHEMA = [
   { key: 'movementFadeSeconds', label: 'Movement fade (seconds)', min: 1, max: 120, step: 1, def: 17,
     help: 'How long the shift from a movement takes to fade once the room is still again.' },
 
+  { group: 'CYCLE' },
+  { key: 'cycleOn', label: 'Dark cycle', type: 'bool', def: true,
+    help: 'true = the screen slowly goes dark, then slowly returns to its brightness. false = brightness stays where it is.' },
+  { key: 'cycleDownMinutes', label: 'Going dark (minutes)', min: 1, max: 240, step: 1, def: 45,
+    help: 'How long the screen takes to go from its brightness to its darkest.' },
+  { key: 'cycleUpMinutes', label: 'Returning (minutes)', min: 1, max: 240, step: 1, def: 45,
+    help: 'How long the screen takes to return from its darkest to its brightness.' },
+  { key: 'cycleDarkest', label: 'Darkest (Value)', min: 0, max: 1, step: 0.01, def: 0,
+    help: 'How dark the cycle goes, as Value. 0 = the screen gives no light at all at the bottom of the cycle.' },
+  { key: 'cycleRepeat', label: 'Repeat cycle', type: 'bool', def: true,
+    help: 'true = after returning, the screen begins going dark again, for as long as the room is open. false = one cycle, then the brightness holds.' },
+
   { group: 'PAGE' },
   { key: 'panelFadeSeconds', label: 'Panel fade (seconds)', min: 1, max: 30, step: 1, def: 3,
     help: 'After this much stillness, the panel and pointer disappear.' },
@@ -126,6 +138,11 @@ const WORD_DEFAULTS = {
   keysHint:      '',
   ended:         'The camera has stopped.',
   mailSubject:   'The Room \u2014 alexius.studio',
+  mailApp:       'Open in mail app',
+  mailGmail:     'Open in Gmail',
+  mailCopy:      'Copy',
+  mailCopied:    'Copied.',
+  mailClose:     'Close',
 };
 
 /* Fixed inner workings. Not for tuning. */
@@ -337,7 +354,29 @@ if (TUNE) {
     if (kept) S = readSettings(JSON.parse(kept)).values;
   } catch (e) {}
 }
-const vLin = () => toLin(S.brightness);
+/* ---- Dark cycle --------------------------------------------
+   Brightness eases (cosine: no sudden start or stop) from the
+   set Value to cycleDarkest over cycleDownMinutes, then back
+   over cycleUpMinutes. Runs only while the room is held; the
+   clock starts the first time the room is held and keeps going
+   through any re-measurement. */
+let cycleStart = null;
+function cycleState() {
+  if (!S.cycleOn || cycleStart === null) return null;
+  const down = S.cycleDownMinutes * 60, up = S.cycleUpMinutes * 60;
+  let t = (Date.now() - cycleStart) / 1000;
+  if (S.cycleRepeat) t %= (down + up);
+  else if (t >= down + up) return { depth: 0, going: 'held', t: down + up, total: down + up };
+  const depth = t < down ? (1 - Math.cos(Math.PI * t / down)) / 2
+                         : (1 + Math.cos(Math.PI * (t - down) / up)) / 2;
+  return { depth, going: t < down ? 'going dark' : 'returning', t, total: down + up };
+}
+/* The Value the screen is at right now. */
+function effValue() {
+  const c = phase === 'running' ? cycleState() : null;
+  return c ? S.brightness + (S.cycleDarkest - S.brightness) * c.depth : S.brightness;
+}
+const vLin = () => toLin(effValue());
 
 /* ---- Elements ----------------------------------------------- */
 const $ = id => document.getElementById(id);
@@ -543,6 +582,7 @@ function run() {
   show('during');
   baseLum = null; brightTicks = 0; prevGray = null;
   trim = [0, 0, 0];
+  if (cycleStart === null) cycleStart = Date.now();
   idle();
   clearInterval(timer);
   timer = setInterval(tick, FIXED.tickMs);
@@ -605,10 +645,11 @@ function tick() {
   setField(shown);
 
   /* With exposure locked, a sudden rise means a light came on. */
+  /* Compared with what the model predicts for the screen's
+     current light, so the cycle's own changes never count. */
   if (caps.exposure) {
-    const l = lum(f.lin);
-    baseLum = baseLum === null ? l : baseLum * 0.99 + l * 0.01;
-    brightTicks = l > baseLum * FIXED.brightJump ? brightTicks + 1 : 0;
+    const expected = lum(sol.room);
+    brightTicks = lum(f.lin) > expected * FIXED.brightJump + 0.01 ? brightTicks + 1 : 0;
     if (brightTicks > 15) return checkRoom();
   }
 
@@ -643,8 +684,25 @@ function mail() {
     '',
     'alexius.studio',
   ];
-  location.href = 'mailto:?subject=' + encodeURIComponent(WORDS.mailSubject) +
-                  '&body=' + encodeURIComponent(lines.join('\n'));
+  const body = lines.join('\n');
+  /* A mailto link does nothing when no mail app is set up (common
+     with webmail), and the browser gives no sign. So the colors
+     are shown, with three ways to send them. */
+  const sheet = $('rc-mail-sheet');
+  $('rc-mail-text').value = body;
+  $('rc-mail-app').href = 'mailto:?subject=' + encodeURIComponent(WORDS.mailSubject) +
+                          '&body=' + encodeURIComponent(body);
+  $('rc-mail-gmail').href = 'https://mail.google.com/mail/?view=cm&fs=1&su=' +
+                            encodeURIComponent(WORDS.mailSubject) + '&body=' + encodeURIComponent(body);
+  $('rc-mail-copy').textContent = WORDS.mailCopy;
+  sheet.hidden = false;
+}
+function closeMail() { $('rc-mail-sheet').hidden = true; idle(); }
+async function copyMail() {
+  const ta = $('rc-mail-text');
+  try { await navigator.clipboard.writeText(ta.value); }
+  catch (e) { ta.select(); document.execCommand && document.execCommand('copy'); }
+  $('rc-mail-copy').textContent = WORDS.mailCopied;
 }
 
 /* ---- Begin / end -------------------------------------------- */
@@ -689,6 +747,8 @@ function end(message) {
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   document.body.classList.remove('rc-live', 'rc-still');
+  cycleStart = null;
+  $('rc-mail-sheet').hidden = true;
   shown = [0, 0, 0];
   setField(shown);
   show('gate');
@@ -702,7 +762,7 @@ function idle() {
   if (phase === 'running') panels.during.classList.remove('rc-faded');
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
-    if (phase !== 'running') return;
+    if (phase !== 'running' || !$('rc-mail-sheet').hidden) return;
     document.body.classList.add('rc-still');
     panels.during.classList.add('rc-faded');
   }, S.panelFadeSeconds * 1000);
@@ -718,7 +778,11 @@ addEventListener('keydown', e => {
   if (!(S.visitorBrightnessKeys || TUNE)) return;
   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     e.preventDefault();
-    const next = e.key === 'ArrowUp' ? S.brightness * FIXED.keyStep : S.brightness / FIXED.keyStep;
+    /* Proportional steps, never smaller than 0.01: at low Values a
+       proportional step rounds to nothing (the old up-arrow fault). */
+    const b = S.brightness;
+    const next = e.key === 'ArrowUp' ? Math.max(b * FIXED.keyStep, b + 0.01)
+                                     : Math.min(b / FIXED.keyStep, b - 0.01);
     setValue('brightness', Math.round(clean(fieldByKey.brightness, next) * 100) / 100, !TUNE);
   }
 });
@@ -759,10 +823,18 @@ function updateReadout(sol) {
     `from target   ${sol ? sol.residual.toFixed(3) : '\u2014'}   (reached at \u2264 ${S.targetTolerance})\n` +
     `target        ${hex(lastTarget)}` + (S.roomMode === 'grey' ? '' :
       `   hue ${(S.roomHue + wander.h).toFixed(1)}\u00b0  strength ${(S.roomColor + wander.p).toFixed(3)}`) + `\n` +
+    `brightness    Value ${effValue().toFixed(3)}` + cycleText() + `\n` +
     `screen        ${hex(shown)}\n` +
     `room (camera) ${lastRoomHex}`;
 }
 
+function cycleText() {
+  if (!S.cycleOn) return '   cycle off';
+  const c = phase === 'running' ? cycleState() : null;
+  if (!c) return '   cycle starts when the room is held';
+  const mm = x => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
+  return `   ${c.going} \u00b7 ${mm(c.t)} of ${mm(c.total)}`;
+}
 function updateDiff() {
   if (!tuneBox) return;
   const changed = fields.filter(f => S[f.key] !== fromFile.values[f.key]).length;
@@ -873,5 +945,8 @@ applyLive();
 $('rc-begin').addEventListener('click', begin);
 $('rc-end').addEventListener('click', () => end());
 $('rc-mail').addEventListener('click', mail);
+$('rc-mail-copy').addEventListener('click', copyMail);
+$('rc-mail-close').addEventListener('click', closeMail);
+['rc-mail-app', 'rc-mail-gmail', 'rc-mail-close'].forEach(id => { $(id).textContent = WORDS[{ 'rc-mail-app': 'mailApp', 'rc-mail-gmail': 'mailGmail', 'rc-mail-close': 'mailClose' }[id]]; });
 window.RoomColor = MATH;   // for testing from the console
 })();

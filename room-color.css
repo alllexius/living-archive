@@ -200,3 +200,29 @@ html.has-cursor:fullscreen body:not(.rc-still) * { cursor: auto; }
   background: var(--eigengrau);
   border: 1px solid var(--veil);
 }
+
+/* ---- The colors, to send (opened by "Email these colors") -- */
+#rc-mail-sheet[hidden] { display: none; }
+#rc-mail-text {
+  width: 100%;
+  margin-top: 0.8rem;
+  font-family: var(--data);
+  font-size: 0.72rem;
+  color: var(--bone);
+  background: var(--eigengrau);
+  border: 1px solid var(--veil);
+  padding: 0.5rem;
+  resize: vertical;
+}
+.rc-panel a.rc-btn {
+  display: inline-block;
+  font-family: var(--data);
+  font-size: 0.78rem;
+  color: var(--bone);
+  text-decoration: none;
+  border: 1px solid var(--veil);
+  padding: 0.35rem 0.8rem;
+  margin-top: 0.6rem;
+  margin-right: 0.6rem;
+}
+.rc-panel a.rc-btn:hover { color: var(--lit); border-color: var(--ash); }

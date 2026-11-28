@@ -15,7 +15,7 @@
   <link rel="icon" href="assets/favicon.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css?v=3">
   <link rel="stylesheet" href="interference.css">
-  <link rel="stylesheet" href="room-color.css?v=3">
+  <link rel="stylesheet" href="room-color.css?v=4">
 </head>
 <body class="rc">
 
@@ -76,6 +76,15 @@
     <button id="rc-end" type="button">End</button>
   </p>
   <p id="rc-keys" class="rc-data"></p>
+  <div id="rc-mail-sheet" hidden>
+    <textarea id="rc-mail-text" rows="8" readonly></textarea>
+    <p>
+      <a id="rc-mail-app" class="rc-btn" href="#">Open in mail app</a>
+      <a id="rc-mail-gmail" class="rc-btn" href="#" target="_blank" rel="noopener noreferrer">Open in Gmail</a>
+      <button id="rc-mail-copy" type="button">Copy</button>
+      <button id="rc-mail-close" type="button">Close</button>
+    </p>
+  </div>
 </section>
 
 <!-- Off-screen: the camera's frames are drawn here, small, and read. -->
@@ -84,7 +93,7 @@
 <div id="cursor" aria-hidden="true"><img src="assets/cursor.png" alt=""></div>
 <script src="cursor.js"></script>
 <script src="interference.js?v=3"></script>
-<script src="room-settings.js?v=2"></script>
-<script src="room-color.js?v=5"></script>
+<script src="room-settings.js?v=3"></script>
+<script src="room-color.js?v=6"></script>
 </body>
 </html>

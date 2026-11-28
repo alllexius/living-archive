@@ -143,6 +143,34 @@ window.ROOM_SETTINGS = {
   // room is still again.
   movementFadeSeconds: 12,
 
+  /* ---- CYCLE ---- */
+
+  // Dark cycle · true or false · original true
+  // true = the screen slowly goes dark, then slowly returns to
+  // its brightness. false = brightness stays where it is.
+  cycleOn: true,
+
+  // Going dark (minutes) · 1 – 240 · original 45
+  // How long the screen takes to go from its brightness to its
+  // darkest.
+  cycleDownMinutes: 45,
+
+  // Returning (minutes) · 1 – 240 · original 45
+  // How long the screen takes to return from its darkest to its
+  // brightness.
+  cycleUpMinutes: 45,
+
+  // Darkest (Value) · 0 – 1 · original 0
+  // How dark the cycle goes, as Value. 0 = the screen gives no
+  // light at all at the bottom of the cycle.
+  cycleDarkest: 0,
+
+  // Repeat cycle · true or false · original true
+  // true = after returning, the screen begins going dark again,
+  // for as long as the room is open. false = one cycle, then the
+  // brightness holds.
+  cycleRepeat: true,
+
   /* ---- PAGE ---- */
 
   // Panel fade (seconds) · 1 – 30 · original 3
@@ -179,4 +207,9 @@ window.ROOM_WORDS = {
   keysHint: "",
   ended: "The camera has stopped.",
   mailSubject: "The Room — alexius.studio",
+  mailApp: "Open in mail app",
+  mailGmail: "Open in Gmail",
+  mailCopy: "Copy",
+  mailCopied: "Copied.",
+  mailClose: "Close",
 };
