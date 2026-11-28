@@ -12,17 +12,30 @@
    stored or sent. The only thing that leaves the page is the
    email the visitor sends themselves, from their own mail app.
 
+   TWO MODES (roomMode in room-settings.js)
+   "red"  — the room is held in a faded, wandering long-wavelength
+            light. The target is how the ROOM looks, not the
+            screen: in a green room the screen must go purer red
+            to reach it, and green surfaces fall toward black.
+   "grey" — the room is held at grey.
+
    HOW IT WORKS
    1. Measure. Screen shows grey light at the set brightness,
       camera reads; screen shows black, camera reads.
          A = black reading     the room's own light (color + brightness)
          K = lit − black       what the screen adds to the room
    2. Solve. The room under the screen is A + K·s. The page
-      picks the screen color s that makes all three channels
-      equal: grey.  L = min(A + K),  s = (L − A) / K.
-   3. Mute. s may never carry more color than colorLimit.
-   4. Hold. Small corrections from the camera, and movement
-      tilts, pass through the same limit. The screen's light is
+      picks the screen color s that makes the room match the
+      target color t (grey = 1,1,1):
+         L = min((A + K) / t),   s = (L·t − A) / K
+   3. Limit. Grey mode: s may carry no more color than
+      colorLimit. Red mode: green and blue in s may not exceed
+      greenLimit and blueLimit (as fractions of red), which
+      keeps short wavelengths, and rod stimulation, low.
+   4. Hold. In red mode the target wanders: hue and color move
+      toward random points, never faster than wanderSpeed, with
+      no period and no repeat. Camera corrections and movement
+      tilts pass through the same limits. The screen's light is
       s × brightness.
    Without a color lock, the camera balances color itself and
    reads every room as grey; then the page estimates the room's
@@ -36,25 +49,43 @@
 /* ---- Every adjustable value: range, original, meaning -------
    room-settings.js is generated from this list. */
 const SCHEMA = [
+  { group: 'COLOR' },
+  { key: 'roomMode', label: 'Mode', type: 'choice', options: ['red', 'grey'], def: 'red',
+    help: '"red" = the room is held in a faded, wandering long-wavelength light. "grey" = the room is held at grey.' },
+  { key: 'roomHue', label: 'Room hue (degrees)', min: -40, max: 40, step: 1, def: 6,
+    help: 'Red mode. The center of the room\u2019s color. 0 = red. Negative leans toward crimson and magenta. Positive leans toward orange.' },
+  { key: 'roomColor', label: 'Room color strength', min: 0, max: 0.95, step: 0.01, def: 0.75,
+    help: 'Red mode. How much color the room itself carries, as the camera sees it. 0 = grey. Low values = a faded red the eye may not name.' },
+  { key: 'greenLimit', label: 'Green limit', min: 0, max: 1, step: 0.01, def: 0.35,
+    help: 'Red mode. Most green the screen may emit, as a fraction of its red. Lower = green surfaces fall darker.' },
+  { key: 'blueLimit', label: 'Blue limit', min: 0, max: 1, step: 0.01, def: 0.3,
+    help: 'Red mode. Most blue the screen may emit, as a fraction of its red. Lower protects dark adaptation (rods respond to short wavelengths, barely to long ones).' },
+  { key: 'wanderHue', label: 'Hue wander (degrees)', min: 0, max: 40, step: 1, def: 12,
+    help: 'Red mode. How far the hue may wander either side of Room hue.' },
+  { key: 'wanderColor', label: 'Color wander', min: 0, max: 0.4, step: 0.01, def: 0.15,
+    help: 'Red mode. How far the color strength may wander either side of Room color strength. Wide = the room passes near grey at times.' },
+  { key: 'wanderSpeed', label: 'Wander speed (degrees / minute)', min: 0, max: 30, step: 0.5, def: 3,
+    help: 'Red mode. The fastest the hue may move. Slow enough, and the change cannot be followed, only found. 0 = no wander.' },
+
   { group: 'LIGHT' },
   { key: 'brightness', label: 'Brightness (Value)', min: 0.02, max: 1, step: 0.01, def: 0.6,
     help: 'How bright the screen glows, as Value: 1 = full, 0.5 = middle grey. Lower lets the screen recede so the room carries the light, not the screen. Below about 0.15 the color steps get coarse.' },
   { key: 'colorLimit', label: 'Color limit', min: 0, max: 0.6, step: 0.01, def: 0.22,
-    help: 'Most color the screen may carry. 0 = only white light. 1 would be one pure color. Lower = more muted, but less able to cancel a colored room.' },
+    help: 'Grey mode. Most color the screen may carry. 0 = only white light. 1 would be one pure color. Lower = more muted, but less able to cancel a colored room.' },
   { key: 'colorFadeSeconds', label: 'Color fade (seconds)', min: 0, max: 10, step: 0.1, def: 0.6,
     help: 'How long each change of the screen\u2019s color takes to arrive. Longer = slower, more continuous drift.' },
 
   { group: 'ROOM' },
   { key: 'darknessNeeded', label: 'Darkness needed', min: 0.2, max: 0.95, step: 0.01, def: 0.6,
     help: 'How much of the light on the visitor must come from the screen before the room begins. 0.6 = 60%. Higher asks for a darker room.' },
-  { key: 'greyTolerance', label: 'Grey tolerance', min: 0, max: 0.2, step: 0.005, def: 0.04,
-    help: 'How much color may remain in the room and still count as grey. 0 = perfectly grey (rarely reachable). Higher lets the room begin sooner.' },
+  { key: 'targetTolerance', label: 'Target tolerance', min: 0, max: 0.3, step: 0.005, def: 0.06,
+    help: 'How far the room may be from its target color and still count as reached. 0 = exact (rarely reachable). Higher lets the room begin sooner.' },
   { key: 'recheckSeconds', label: 'Recheck (seconds)', min: 1, max: 10, step: 0.5, def: 2.5,
     help: 'While conditions are not met, how often the page measures the room again. Each measurement is one flash of light, then dark.' },
 
   { group: 'HOLDING' },
   { key: 'correctionSpeed', label: 'Correction speed', min: 0, max: 0.05, step: 0.001, def: 0.008,
-    help: 'How quickly the page corrects toward grey while the camera watches. 0 = never corrects after the first measurement. Too high can make the color waver.' },
+    help: 'How quickly the page corrects toward the target while the camera watches. 0 = never corrects after the first measurement. Too high can make the color waver.' },
   { key: 'correctionRange', label: 'Correction range', min: 0, max: 0.3, step: 0.01, def: 0.12,
     help: 'How far corrections may move the color away from the first measurement.' },
 
@@ -62,7 +93,7 @@ const SCHEMA = [
   { key: 'movementThreshold', label: 'Movement threshold', min: 1, max: 20, step: 0.5, def: 5,
     help: 'How much movement it takes to shift the color. Lower = a hand\u2019s shadow is enough. Higher = only large movement.' },
   { key: 'movementStrength', label: 'Movement strength', min: 0, max: 0.3, step: 0.01, def: 0.1,
-    help: 'How far movement can shift the color. 0 = movement changes nothing. Always within the color limit.' },
+    help: 'How far movement can shift the color. 0 = movement changes nothing. Always within the limits above.' },
   { key: 'movementRate', label: 'Movement rate', min: 0, max: 0.05, step: 0.001, def: 0.012,
     help: 'How fast the color answers movement while it happens.' },
   { key: 'movementFadeSeconds', label: 'Movement fade (seconds)', min: 1, max: 120, step: 1, def: 17,
@@ -72,7 +103,7 @@ const SCHEMA = [
   { key: 'panelFadeSeconds', label: 'Panel fade (seconds)', min: 1, max: 30, step: 1, def: 3,
     help: 'After this much stillness, the panel and pointer disappear.' },
   { key: 'visitorBrightnessKeys', label: 'Visitor brightness keys', type: 'bool', def: true,
-    help: 'true = visitors can press the up and down arrow keys to adjust brightness for their own screen and room. false = brightness is fixed at the value above.' },
+    help: 'true = the up and down arrow keys adjust brightness, for a visitor who looks for it. Nothing on the page invites it unless the keysHint words below are filled in. false = brightness is fixed.' },
 ];
 
 const WORD_DEFAULTS = {
@@ -85,11 +116,14 @@ const WORD_DEFAULTS = {
   muchTooBright: 'Please turn off the lights in the room, or close the curtains.',
   tooBright:     'Please lower the light in the room a little more.',
   tooColored:    'The room\u2019s own light is too colored to mute. Please lower it further.',
+  tooStrong:     'The room\u2019s own light is too strong to color. Please lower it further.',
   muteMet:       'Room color muted',
   muteWeak:      'Room color partly muted',
   muteUnknown:   'Room color',
+  targetMet:     'Room color held',
+  targetWeak:    'Room color partly held',
   met:           'Held.',
-  keysHint:      '\u2191 \u2193 brightness',
+  keysHint:      '',
   ended:         'The camera has stopped.',
   mailSubject:   'The Room \u2014 alexius.studio',
 };
@@ -107,6 +141,7 @@ const fieldByKey = Object.fromEntries(fields.map(f => [f.key, f]));
 /* Read one value safely: wrong type → original; out of range → nearest end. */
 function clean(f, v) {
   if (f.type === 'bool') return typeof v === 'boolean' ? v : f.def;
+  if (f.type === 'choice') return f.options.includes(v) ? v : f.def;
   v = Number(v);
   if (!isFinite(v)) return f.def;
   return Math.min(f.max, Math.max(f.min, v));
@@ -133,6 +168,7 @@ function settingsFileText(values, words) {
   L.push('   - Change a number after the colon. Keep the comma at the');
   L.push('     end of the line.');
   L.push('   - true / false: write one or the other, no quotes.');
+  L.push('   - Choices ("red" or "grey"): keep the quote marks.');
   L.push('   - Words: change the text between the quote marks only.');
   L.push('');
   L.push('   Each number has a range. A value outside it is pulled to');
@@ -151,10 +187,13 @@ function settingsFileText(values, words) {
   for (const f of SCHEMA) {
     if (f.group) { L.push(''); L.push(`  /* ---- ${f.group} ---- */`); continue; }
     L.push('');
-    const range = f.type === 'bool' ? 'true or false' : `${f.min} \u2013 ${f.max}`;
-    L.push(`  // ${f.label} \u00b7 ${range} \u00b7 original ${f.def}`);
+    const range = f.type === 'bool' ? 'true or false'
+                : f.type === 'choice' ? f.options.map(o => JSON.stringify(o)).join(' or ')
+                : `${f.min} \u2013 ${f.max}`;
+    const show = v => typeof v === 'string' ? JSON.stringify(v) : v;
+    L.push(`  // ${f.label} \u00b7 ${range} \u00b7 original ${show(f.def)}`);
     wrap(f.help, 60).forEach(line => L.push(`  // ${line}`));
-    L.push(`  ${f.key}: ${values[f.key]},`);
+    L.push(`  ${f.key}: ${show(values[f.key])},`);
   }
   L.push('};');
   L.push('');
@@ -197,10 +236,35 @@ function sat(v) {                       // 0 = grey/white, 1 = a pure primary
   const hi = Math.max(v[0], v[1], v[2]), lo = Math.min(v[0], v[1], v[2]);
   return hi > 0 ? 1 - lo / hi : 0;
 }
-function solveGrey(A, K) {              // screen color making A + K·s grey
+function solveTarget(A, K, t) {         // screen color making A + K·s look like t
   const k = K.map(x => Math.max(x, 1e-6));
-  const L = Math.min(A[0] + k[0], A[1] + k[1], A[2] + k[2]);
-  return top1(A.map((a, c) => Math.max(0, (L - a) / k[c])));
+  const tt = t.map(x => Math.max(x, 1e-4));
+  const L = Math.min(...A.map((a, c) => (a + k[c]) / tt[c]));
+  return top1(A.map((a, c) => Math.max(0, (L * tt[c] - a) / k[c])));
+}
+const solveGrey = (A, K) => solveTarget(A, K, [1, 1, 1]);
+/* Hue in degrees (0 = red) → linear color at full strength. */
+function hueToLin(h) {
+  h = ((h % 360) + 360) % 360 / 60;
+  const x = 1 - Math.abs(h % 2 - 1);
+  const e = h < 1 ? [1, x, 0] : h < 2 ? [x, 1, 0] : h < 3 ? [0, 1, x]
+          : h < 4 ? [0, x, 1] : h < 5 ? [x, 0, 1] : [1, 0, x];
+  return e.map(toLin);
+}
+/* Target room color: hue, strength 0 (grey) – 1 (pure). */
+function targetColor(h, p) {
+  p = Math.min(1, Math.max(0, p));
+  return top1(hueToLin(h).map(b => 1 - p * (1 - b)));
+}
+/* Red mode: green and blue at most these fractions of red. */
+function limitShort(s, gl, bl) {
+  const r = s[0];
+  return top1([r, Math.min(s[1], gl * r), Math.min(s[2], bl * r)]);
+}
+/* How far two colors are apart, ignoring brightness. 0 = same. */
+function colorDistance(a, b) {
+  a = top1(a); b = top1(b);
+  return Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2]));
 }
 function mute(s, max) {                 // pull toward white until color ≤ max
   s = top1(s);
@@ -231,17 +295,23 @@ function cctToLin(T) {
      0.0557 * X - 0.2040 + 1.0570 * Z,
   ].map(c => Math.max(0, c)));
 }
-/* The model at a given brightness (linear): screen color, how
-   grey the room will be, share of light from the screen. */
-function solveAt(model, vLin, colorLimit) {
+/* Apply the mode's limits to a screen color. */
+function limit(s, S) {
+  return S.roomMode === 'grey' ? mute(s, S.colorLimit) : limitShort(top1(s), S.greenLimit, S.blueLimit);
+}
+/* The model at a given brightness (linear) and target: screen
+   color, how far the room lands from the target, share of light
+   from the screen. */
+function solveAt(model, vLin, S, t) {
   const K = model.K1.map(k => k * vLin);
-  const s = mute(solveGrey(model.A, K), colorLimit);
+  const s = limit(solveTarget(model.A, K, t), S);
   const room = model.A.map((a, c) => a + K[c] * s[c]);
   const share = lum(K) / Math.max(1e-9, lum(K) + lum(model.A));
-  return { s, residual: sat(room), share };
+  return { s, room, residual: colorDistance(room, t), share };
 }
 
-const MATH = { LUT, toLin, linToSrgb8, hex, lum, sat, top1, solveGrey, mute, hueVector, cctToLin, solveAt };
+const MATH = { LUT, toLin, linToSrgb8, hex, lum, sat, top1, solveTarget, solveGrey, hueToLin, targetColor,
+               limitShort, colorDistance, mute, limit, hueVector, cctToLin, solveAt };
 if (typeof module !== 'undefined') {
   module.exports = { ...MATH, SCHEMA, WORD_DEFAULTS, readSettings, settingsFileText };
   return;
@@ -287,6 +357,30 @@ let trim = [0, 0, 0], tilt = [0, 0, 0];
 let prevGray = null, probing = false, timer = null;
 let roomAtStart = null, baseLum = null, brightTicks = 0;
 let lastRoomHex = '\u2014', lastCct = null;
+let lastTarget = [1, 1, 1];
+
+/* ---- Wander: hue and color drift toward random points, never
+   faster than wanderSpeed, eased so there are no corners. No
+   period, no repeat, nothing to follow. */
+const wander = { h: 0, p: 0, vh: 0, vp: 0, goalH: 0, goalP: 0 };
+function stepWander(dt) {
+  const maxH = S.wanderSpeed / 60;                 // degrees per second
+  const maxP = maxH / 200;                          // strength per second
+  if (Math.abs(wander.h - wander.goalH) < 0.2)   wander.goalH = (Math.random() * 2 - 1) * S.wanderHue;
+  if (Math.abs(wander.p - wander.goalP) < 0.002) wander.goalP = (Math.random() * 2 - 1) * S.wanderColor;
+  const ease = 1 - Math.exp(-dt / 20);              // velocity eases over ~20 s
+  const want = (x, g, max) => Math.max(-max, Math.min(max, (g - x) / 30));
+  wander.vh += (want(wander.h, wander.goalH, maxH) - wander.vh) * ease;
+  wander.vp += (want(wander.p, wander.goalP, maxP) - wander.vp) * ease;
+  wander.h += wander.vh * dt;
+  wander.p += wander.vp * dt;
+  wander.h = Math.max(-S.wanderHue, Math.min(S.wanderHue, wander.h));
+  wander.p = Math.max(-S.wanderColor, Math.min(S.wanderColor, wander.p));
+}
+function currentTarget() {
+  if (S.roomMode === 'grey') return [1, 1, 1];
+  return targetColor(S.roomHue + wander.h, S.roomColor + wander.p);
+}
 let log = [], lastLogAt = 0;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -413,25 +507,27 @@ async function checkRoom() {
   while (phase === 'conditions') {
     const { lit } = await measure();
     if (phase !== 'conditions') return;
-    const { residual, share } = solveAt(model, vLin(), S.colorLimit);
+    lastTarget = currentTarget();
+    const { residual, share } = solveAt(model, vLin(), S, lastTarget);
     $('rc-meter-fill').style.width = Math.min(100, share * 100) + '%';
     const instr = $('rc-instruction');
     const bright = share >= S.darknessNeeded;
-    const grey = residual <= S.greyTolerance;
+    const grey = residual <= S.targetTolerance;
+    const red = S.roomMode !== 'grey';
     const known = caps.balance || !!lastCct;
     updateReadout({ share, residual });
 
     mark('dark', bright ? 'met' : share >= S.darknessNeeded / 2 ? 'weak' : 'unmet');
     if (!known)      mark('mute', 'weak', WORDS.muteUnknown);
-    else if (grey)   mark('mute', 'met',  WORDS.muteMet);
-    else             mark('mute', 'weak', WORDS.muteWeak);
+    else if (grey)   mark('mute', 'met',  red ? WORDS.targetMet : WORDS.muteMet);
+    else             mark('mute', 'weak', red ? WORDS.targetWeak : WORDS.muteWeak);
 
     if (lit < 0.002) {
       mark('dark', 'unmet'); instr.textContent = WORDS.blind;
     } else if (!bright) {
       instr.textContent = share < S.darknessNeeded / 2 ? WORDS.muchTooBright : WORDS.tooBright;
     } else if (known && !grey) {
-      instr.textContent = WORDS.tooColored;
+      instr.textContent = red ? WORDS.tooStrong : WORDS.tooColored;
     } else {
       instr.textContent = WORDS.met;
       await sleep(1500);
@@ -486,20 +582,25 @@ function tick() {
   const decay = Math.exp(-(FIXED.tickMs / 1000) / S.movementFadeSeconds);
   tilt = clampMag(tilt.map(t => t * decay), S.movementStrength);
 
-  /* Corrections only when the camera's color is locked. */
+  /* Target: the mode's color, wandering, tilted by movement. */
+  stepWander(FIXED.tickMs / 1000);
+  const tz = zeroMean(tilt);
+  const t = top1(currentTarget().map((x, c) => Math.max(1e-4, x) * Math.exp(tz[c])));
+  lastTarget = t;
+
+  /* Corrections only when the camera's color is locked: the
+     room as read vs the target, both without brightness. */
   if (caps.balance) {
-    const m = (f.lin[0] + f.lin[1] + f.lin[2]) / 3;
-    if (m > 1e-5) {
-      const err = zeroMean(f.lin.map(v => Math.log(Math.max(v, 1e-6) / m)));
-      trim = trim.map((t, c) => (t - S.correctionSpeed * err[c]) * FIXED.trimLeak);
-    }
+    const lg = v => zeroMean(v.map(x => Math.log(Math.max(x, 1e-6))));
+    const err = lg(f.lin).map((x, c) => x - lg(t)[c]);
+    trim = trim.map((q, c) => (q - S.correctionSpeed * err[c]) * FIXED.trimLeak);
   }
   trim = clampMag(trim, S.correctionRange);
 
   const v = vLin();
-  const sol = solveAt(model, v, S.colorLimit);
-  const adj = zeroMean(trim.map((t, c) => t + tilt[c]));
-  const s = mute(sol.s.map((x, c) => Math.max(1e-4, x) * Math.exp(adj[c])), S.colorLimit);
+  const sol = solveAt(model, v, S, t);
+  const adj = zeroMean(trim);
+  const s = limit(sol.s.map((x, c) => Math.max(1e-4, x) * Math.exp(adj[c])), S);
   shown = s.map(x => x * v);
   setField(shown);
 
@@ -534,6 +635,7 @@ function mail() {
     new Date().toDateString(),
     '',
     roomAtStart ? 'Room at start   ' + hex(roomAtStart) : '',
+    'Mode            ' + S.roomMode,
     'Brightness      ' + S.brightness,
     '',
     'time   screen    room',
@@ -654,7 +756,9 @@ function updateReadout(sol) {
     `camera        ${mode}\n` +
     `exposure      ${!track ? '\u2014' : caps.exposure ? 'locked' : 'automatic'}\n` +
     `from screen   ${sol ? Math.round(sol.share * 100) + '%' : '\u2014'}   (needed ${Math.round(S.darknessNeeded * 100)}%)\n` +
-    `room color    ${sol ? sol.residual.toFixed(3) : '\u2014'}   (grey at \u2264 ${S.greyTolerance})\n` +
+    `from target   ${sol ? sol.residual.toFixed(3) : '\u2014'}   (reached at \u2264 ${S.targetTolerance})\n` +
+    `target        ${hex(lastTarget)}` + (S.roomMode === 'grey' ? '' :
+      `   hue ${(S.roomHue + wander.h).toFixed(1)}\u00b0  strength ${(S.roomColor + wander.p).toFixed(3)}`) + `\n` +
     `screen        ${hex(shown)}\n` +
     `room (camera) ${lastRoomHex}`;
 }
@@ -693,7 +797,14 @@ function buildTune() {
     const row = document.createElement('div'); row.className = 'rc-tune-row';
     const lab = document.createElement('label'); lab.textContent = f.label; lab.htmlFor = 'rc-t-' + f.key;
     row.appendChild(lab);
-    if (f.type === 'bool') {
+    if (f.type === 'choice') {
+      const sel = document.createElement('select'); sel.id = 'rc-t-' + f.key;
+      f.options.forEach(o => { const op = document.createElement('option'); op.value = op.textContent = o; sel.appendChild(op); });
+      sel.value = S[f.key];
+      sel.addEventListener('change', () => setValue(f.key, sel.value));
+      row.appendChild(sel);
+      inputs[f.key] = [sel];
+    } else if (f.type === 'bool') {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'rc-t-' + f.key;
       cb.checked = S[f.key];
       cb.addEventListener('change', () => setValue(f.key, cb.checked));
